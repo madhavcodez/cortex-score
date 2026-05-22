@@ -1,0 +1,249 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 600" width="1400" height="600">
+  <defs>
+    <radialGradient id="bgGlow" cx="85%" cy="15%" r="60%">
+      <stop offset="0%" stop-color="#1E2944" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#0A0E1A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="brainShade" cx="50%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#1F2A44"/>
+      <stop offset="100%" stop-color="#0F1626"/>
+    </radialGradient>
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="14"/>
+      <feOffset dy="6"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.45"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="patchGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+  </defs>
+
+  <!-- Base + glow -->
+  <rect width="1400" height="600" fill="#0A0E1A"/>
+  <rect width="1400" height="600" fill="url(#bgGlow)"/>
+
+  <!-- Subtle grid lines for editorial feel -->
+  <g stroke="#1F2937" stroke-width="0.5" opacity="0.4">
+    <line x1="0" y1="120" x2="1400" y2="120"/>
+    <line x1="0" y1="480" x2="1400" y2="480"/>
+    <line x1="700" y1="0" x2="700" y2="600"/>
+  </g>
+
+  <!-- ============ LEFT COLUMN ============ -->
+  <g transform="translate(80, 90)">
+    <!-- Eyebrow / tagline -->
+    <text x="0" y="0" font-family="'JetBrains Mono', monospace" font-size="12" fill="#5BC0EB" letter-spacing="4">PYTHON  ·  NEUROSCIENCE  ·  BRAIN ENCODING</text>
+
+    <!-- Giant title -->
+    <text x="0" y="92" font-family="Inter, system-ui, sans-serif" font-size="92" font-weight="800" fill="#F3F4F6" letter-spacing="-3">cortex-score</text>
+
+    <!-- Subtitle -->
+    <text x="0" y="140" font-family="'Source Serif Pro', Georgia, serif" font-size="28" font-style="italic" fill="#D1D5DB">Score any video for predicted cortical engagement</text>
+    <text x="0" y="178" font-family="'Source Serif Pro', Georgia, serif" font-size="28" font-style="italic" fill="#9CA3AF">across <tspan fill="#5BC0EB" font-weight="600">5</tspan> brain networks.</text>
+
+    <!-- Description chip -->
+    <g transform="translate(0, 210)">
+      <rect x="0" y="0" width="540" height="38" rx="19" fill="#131826" stroke="#1F2937"/>
+      <circle cx="22" cy="19" r="4" fill="#34D399"/>
+      <text x="40" y="24" font-family="'JetBrains Mono', monospace" font-size="13" fill="#9CA3AF">Built on Meta FAIR's TRIBE v2  ·  fsaverage5 cortical mesh</text>
+    </g>
+
+    <!-- Stat pills -->
+    <g transform="translate(0, 280)">
+      <!-- Pill 1: 5 networks -->
+      <g>
+        <rect x="0" y="0" width="190" height="120" rx="14" fill="#131826" stroke="#1F2937" filter="url(#cardShadow)"/>
+        <text x="20" y="50" font-family="Inter, system-ui, sans-serif" font-size="48" font-weight="800" fill="#5BC0EB">5</text>
+        <text x="20" y="78" font-family="'JetBrains Mono', monospace" font-size="10" fill="#9CA3AF" letter-spacing="2">BRAIN NETWORKS</text>
+        <text x="20" y="98" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#6B7280">visual · language · faces</text>
+        <text x="20" y="112" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#6B7280">attention · motion</text>
+      </g>
+
+      <!-- Pill 2: 20,484 vertices -->
+      <g transform="translate(210, 0)">
+        <rect x="0" y="0" width="210" height="120" rx="14" fill="#131826" stroke="#1F2937" filter="url(#cardShadow)"/>
+        <text x="20" y="50" font-family="Inter, system-ui, sans-serif" font-size="40" font-weight="800" fill="#9BC53D">20,484</text>
+        <text x="20" y="78" font-family="'JetBrains Mono', monospace" font-size="10" fill="#9CA3AF" letter-spacing="2">CORTICAL VERTICES</text>
+        <text x="20" y="98" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#6B7280">Schaefer-400 → Yeo-17</text>
+        <text x="20" y="112" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#6B7280">→ 5-group rollup</text>
+      </g>
+
+      <!-- Pill 3: 76 KB wheel -->
+      <g transform="translate(440, 0)">
+        <rect x="0" y="0" width="190" height="120" rx="14" fill="#131826" stroke="#1F2937" filter="url(#cardShadow)"/>
+        <text x="20" y="50" font-family="Inter, system-ui, sans-serif" font-size="44" font-weight="800" fill="#7E5BEF">76 <tspan font-size="22" font-weight="600">KB</tspan></text>
+        <text x="20" y="78" font-family="'JetBrains Mono', monospace" font-size="10" fill="#9CA3AF" letter-spacing="2">WHEEL SIZE</text>
+        <text x="20" y="98" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#6B7280">Atlas data bundled,</text>
+        <text x="20" y="112" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#6B7280">no fetch on first run</text>
+      </g>
+    </g>
+
+    <!-- Tech chips -->
+    <g transform="translate(0, 430)">
+      <g font-family="'JetBrains Mono', monospace" font-size="11">
+        <g>
+          <rect x="0" y="0" width="110" height="26" rx="13" fill="#0F1626" stroke="#1F2937"/>
+          <text x="55" y="17" fill="#D1D5DB" text-anchor="middle">Python 3.11+</text>
+        </g>
+        <g transform="translate(120, 0)">
+          <rect x="0" y="0" width="92" height="26" rx="13" fill="#0F1626" stroke="#1F2937"/>
+          <text x="46" y="17" fill="#D1D5DB" text-anchor="middle">TRIBE v2</text>
+        </g>
+        <g transform="translate(222, 0)">
+          <rect x="0" y="0" width="76" height="26" rx="13" fill="#0F1626" stroke="#1F2937"/>
+          <text x="38" y="17" fill="#D1D5DB" text-anchor="middle">PyTorch</text>
+        </g>
+        <g transform="translate(308, 0)">
+          <rect x="0" y="0" width="100" height="26" rx="13" fill="#0F1626" stroke="#1F2937"/>
+          <text x="50" y="17" fill="#D1D5DB" text-anchor="middle">Pydantic v2</text>
+        </g>
+        <g transform="translate(418, 0)">
+          <rect x="0" y="0" width="60" height="26" rx="13" fill="#0F1626" stroke="#1F2937"/>
+          <text x="30" y="17" fill="#D1D5DB" text-anchor="middle">MIT</text>
+        </g>
+        <g transform="translate(488, 0)">
+          <rect x="0" y="0" width="110" height="26" rx="13" fill="#1A0F1F" stroke="#3F1D29"/>
+          <text x="55" y="17" fill="#F87171" text-anchor="middle">model: CC-BY-NC</text>
+        </g>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============ RIGHT COLUMN: BRAIN VISUALIZATION ============ -->
+  <g transform="translate(770, 70)">
+    <!-- Card backdrop -->
+    <rect x="0" y="0" width="560" height="460" rx="22" fill="#0F1626" stroke="#1F2937" stroke-width="1.5" filter="url(#cardShadow)"/>
+
+    <!-- Card header bar -->
+    <g>
+      <text x="28" y="40" font-family="'JetBrains Mono', monospace" font-size="11" fill="#6B7280" letter-spacing="3">SAMPLE SCORE  ·  CLIP 0043e171…</text>
+      <text x="532" y="40" font-family="'JetBrains Mono', monospace" font-size="11" fill="#5BC0EB" text-anchor="end" letter-spacing="2">fsaverage5</text>
+    </g>
+    <line x1="28" y1="58" x2="532" y2="58" stroke="#1F2937"/>
+
+    <!-- Brain: dorsal-view schematic of left + right hemisphere with 5 colored network patches -->
+    <g transform="translate(80, 90)">
+      <!-- Reference: each hemisphere ~150x200, separated by a midline gap -->
+      <!-- Hemisphere shapes are organic blobs (cubic beziers approximating cerebrum) -->
+
+      <!-- LEFT hemisphere -->
+      <g>
+        <path d="M 80 5
+                 C 140 0, 175 35, 175 100
+                 C 175 165, 145 215, 90 220
+                 C 35 220, 8 175, 8 105
+                 C 8 45, 30 10, 80 5 Z"
+              fill="url(#brainShade)" stroke="#2A3550" stroke-width="1.2"/>
+
+        <!-- Visual patch (occipital — bottom of dorsal view) -->
+        <path d="M 50 175 C 35 195, 70 220, 110 215 C 145 210, 150 185, 130 170 C 105 158, 70 162, 50 175 Z"
+              fill="#5BC0EB" opacity="0.85" filter="url(#patchGlow)"/>
+        <path d="M 50 175 C 35 195, 70 220, 110 215 C 145 210, 150 185, 130 170 C 105 158, 70 162, 50 175 Z"
+              fill="none" stroke="#5BC0EB" stroke-width="1.2"/>
+
+        <!-- Motion patch (motor cortex — top strip) -->
+        <path d="M 60 30 C 110 22, 150 35, 155 60 C 145 75, 100 75, 60 70 C 35 60, 38 38, 60 30 Z"
+              fill="#7E5BEF" opacity="0.85" filter="url(#patchGlow)"/>
+        <path d="M 60 30 C 110 22, 150 35, 155 60 C 145 75, 100 75, 60 70 C 35 60, 38 38, 60 30 Z"
+              fill="none" stroke="#7E5BEF" stroke-width="1.2"/>
+
+        <!-- Attention patch (parietal — upper lateral) -->
+        <path d="M 20 80 C 45 70, 70 75, 75 100 C 75 122, 50 132, 30 125 C 12 115, 10 92, 20 80 Z"
+              fill="#9BC53D" opacity="0.85" filter="url(#patchGlow)"/>
+        <path d="M 20 80 C 45 70, 70 75, 75 100 C 75 122, 50 132, 30 125 C 12 115, 10 92, 20 80 Z"
+              fill="none" stroke="#9BC53D" stroke-width="1.2"/>
+
+        <!-- Language patch (temporal — lateral middle, slightly larger on left for laterality) -->
+        <path d="M 110 100 C 145 95, 165 115, 158 138 C 145 158, 110 158, 95 140 C 85 122, 95 105, 110 100 Z"
+              fill="#FFB627" opacity="0.85" filter="url(#patchGlow)"/>
+        <path d="M 110 100 C 145 95, 165 115, 158 138 C 145 158, 110 158, 95 140 C 85 122, 95 105, 110 100 Z"
+              fill="none" stroke="#FFB627" stroke-width="1.2"/>
+
+        <!-- Faces patch (ventral-temporal — small ventral patch) -->
+        <ellipse cx="55" cy="148" rx="20" ry="14" fill="#E55D87" opacity="0.85" filter="url(#patchGlow)"/>
+        <ellipse cx="55" cy="148" rx="20" ry="14" fill="none" stroke="#E55D87" stroke-width="1.2"/>
+      </g>
+
+      <!-- Midline divider -->
+      <line x1="195" y1="20" x2="195" y2="210" stroke="#1F2937" stroke-dasharray="3,4"/>
+
+      <!-- RIGHT hemisphere (mirror) -->
+      <g transform="translate(390, 0) scale(-1, 1)">
+        <path d="M 80 5
+                 C 140 0, 175 35, 175 100
+                 C 175 165, 145 215, 90 220
+                 C 35 220, 8 175, 8 105
+                 C 8 45, 30 10, 80 5 Z"
+              fill="url(#brainShade)" stroke="#2A3550" stroke-width="1.2"/>
+
+        <path d="M 50 175 C 35 195, 70 220, 110 215 C 145 210, 150 185, 130 170 C 105 158, 70 162, 50 175 Z"
+              fill="#5BC0EB" opacity="0.85" filter="url(#patchGlow)"/>
+        <path d="M 50 175 C 35 195, 70 220, 110 215 C 145 210, 150 185, 130 170 C 105 158, 70 162, 50 175 Z"
+              fill="none" stroke="#5BC0EB" stroke-width="1.2"/>
+
+        <path d="M 60 30 C 110 22, 150 35, 155 60 C 145 75, 100 75, 60 70 C 35 60, 38 38, 60 30 Z"
+              fill="#7E5BEF" opacity="0.85" filter="url(#patchGlow)"/>
+        <path d="M 60 30 C 110 22, 150 35, 155 60 C 145 75, 100 75, 60 70 C 35 60, 38 38, 60 30 Z"
+              fill="none" stroke="#7E5BEF" stroke-width="1.2"/>
+
+        <path d="M 20 80 C 45 70, 70 75, 75 100 C 75 122, 50 132, 30 125 C 12 115, 10 92, 20 80 Z"
+              fill="#9BC53D" opacity="0.85" filter="url(#patchGlow)"/>
+        <path d="M 20 80 C 45 70, 70 75, 75 100 C 75 122, 50 132, 30 125 C 12 115, 10 92, 20 80 Z"
+              fill="none" stroke="#9BC53D" stroke-width="1.2"/>
+
+        <path d="M 110 100 C 140 95, 158 115, 152 135 C 140 155, 110 155, 95 138 C 85 120, 95 105, 110 100 Z"
+              fill="#FFB627" opacity="0.7" filter="url(#patchGlow)"/>
+        <path d="M 110 100 C 140 95, 158 115, 152 135 C 140 155, 110 155, 95 138 C 85 120, 95 105, 110 100 Z"
+              fill="none" stroke="#FFB627" stroke-width="1.2"/>
+
+        <ellipse cx="55" cy="148" rx="20" ry="14" fill="#E55D87" opacity="0.85" filter="url(#patchGlow)"/>
+        <ellipse cx="55" cy="148" rx="20" ry="14" fill="none" stroke="#E55D87" stroke-width="1.2"/>
+      </g>
+
+      <!-- Anatomy axis labels -->
+      <text x="-12" y="115" font-family="'JetBrains Mono', monospace" font-size="9" fill="#4B5563" letter-spacing="2" transform="rotate(-90, -12, 115)">LATERAL</text>
+      <text x="195" y="-2" font-family="'JetBrains Mono', monospace" font-size="9" fill="#4B5563" letter-spacing="2" text-anchor="middle">ANTERIOR</text>
+      <text x="195" y="234" font-family="'JetBrains Mono', monospace" font-size="9" fill="#4B5563" letter-spacing="2" text-anchor="middle">POSTERIOR</text>
+    </g>
+
+    <!-- Timeline strip showing 6 segments -->
+    <g transform="translate(28, 340)">
+      <text x="0" y="-6" font-family="'JetBrains Mono', monospace" font-size="9" fill="#6B7280" letter-spacing="2">SEGMENT TIMELINE  ·  6 × 1.0s @ 5.3s CLIP</text>
+      <g>
+        <!-- 6 segment ticks, each 76px wide -->
+        <rect x="0" y="0" width="76" height="14" rx="3" fill="#5BC0EB" opacity="0.9"/>
+        <rect x="80" y="0" width="76" height="14" rx="3" fill="#FFB627" opacity="0.9"/>
+        <rect x="160" y="0" width="76" height="14" rx="3" fill="#E55D87" opacity="0.7"/>
+        <rect x="240" y="0" width="76" height="14" rx="3" fill="#9BC53D" opacity="0.9"/>
+        <rect x="320" y="0" width="76" height="14" rx="3" fill="#5BC0EB" opacity="0.7"/>
+        <rect x="400" y="0" width="76" height="14" rx="3" fill="#7E5BEF" opacity="0.9"/>
+      </g>
+      <text x="0" y="34" font-family="'JetBrains Mono', monospace" font-size="9" fill="#4B5563">t=0s</text>
+      <text x="476" y="34" font-family="'JetBrains Mono', monospace" font-size="9" fill="#4B5563" text-anchor="end">t=5.3s</text>
+    </g>
+
+    <!-- 5-network legend with sample values from the real smoke test -->
+    <g transform="translate(28, 390)">
+      <text x="0" y="-2" font-family="'JetBrains Mono', monospace" font-size="9" fill="#6B7280" letter-spacing="2">MEAN ENERGY  ·  Z-SCORED WITHIN VIDEO</text>
+      <g font-family="'JetBrains Mono', monospace" font-size="10">
+        <g transform="translate(0, 12)">
+          <rect x="0" y="0" width="92" height="14" rx="3" fill="#FFB627" opacity="0.9"/>
+          <text x="100" y="11" fill="#D1D5DB">0.890 LANGUAGE</text>
+        </g>
+        <g transform="translate(0, 32)">
+          <rect x="0" y="0" width="86" height="14" rx="3" fill="#E55D87" opacity="0.9"/>
+          <text x="100" y="11" fill="#D1D5DB">0.838 FACES</text>
+        </g>
+        <g transform="translate(255, 12)">
+          <rect x="0" y="0" width="83" height="14" rx="3" fill="#9BC53D" opacity="0.9"/>
+          <text x="100" y="11" fill="#D1D5DB">0.816 ATTENTION</text>
+        </g>
+        <g transform="translate(255, 32)">
+          <rect x="0" y="0" width="76" height="14" rx="3" fill="#5BC0EB" opacity="0.9"/>
+          <text x="100" y="11" fill="#D1D5DB">0.748 VISUAL</text>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

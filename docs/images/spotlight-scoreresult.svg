@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" width="1200" height="480">
+  <defs>
+    <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="8"/>
+      <feOffset dy="4"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="480" fill="#0A0E1A"/>
+
+  <!-- Header -->
+  <text x="40" y="36" font-family="'JetBrains Mono', monospace" font-size="11" fill="#6B7280" letter-spacing="4">SPOTLIGHT  ·  THE OUTPUT CONTRACT</text>
+  <text x="40" y="68" font-family="Inter, system-ui, sans-serif" font-size="24" font-weight="700" fill="#F3F4F6">Every score embeds its own audit trail</text>
+  <text x="40" y="92" font-family="Inter, system-ui, sans-serif" font-size="14" fill="#9CA3AF">Pydantic v2 JSON · pinned model revision · SHA-256 fingerprints · explicit normalization scope · PII-safe by default.</text>
+
+  <!-- ============ LEFT: JSON snippet ============ -->
+  <g transform="translate(40, 116)" filter="url(#dropShadow)">
+    <rect width="700" height="340" rx="14" fill="#0F1626" stroke="#1F2937"/>
+
+    <!-- Window-bar header -->
+    <g>
+      <circle cx="26" cy="22" r="5" fill="#F87171"/>
+      <circle cx="44" cy="22" r="5" fill="#FFB627"/>
+      <circle cx="62" cy="22" r="5" fill="#9BC53D"/>
+      <text x="350" y="26" font-family="'JetBrains Mono', monospace" font-size="11" fill="#6B7280" text-anchor="middle">my_clip.score.json  ·  schema 1.0</text>
+    </g>
+    <line x1="0" y1="42" x2="700" y2="42" stroke="#1F2937"/>
+
+    <!-- JSON body -->
+    <g transform="translate(24, 64)" font-family="'JetBrains Mono', monospace" font-size="11.5">
+      <text>
+        <tspan x="0" y="0" fill="#9CA3AF">{</tspan>
+        <tspan x="16" y="18" fill="#9CA3AF">"</tspan><tspan fill="#5BC0EB">result_id</tspan><tspan fill="#9CA3AF">"</tspan>
+        <tspan fill="#6B7280">: </tspan>
+        <tspan fill="#9BC53D">"7545cf1e2b742ba7a489…"</tspan>
+        <tspan fill="#6B7280">,</tspan>
+        <tspan x="16" y="36" fill="#9CA3AF">"</tspan><tspan fill="#5BC0EB">provenance</tspan><tspan fill="#9CA3AF">"</tspan>
+        <tspan fill="#6B7280">: {</tspan>
+        <tspan x="32" y="54" fill="#9CA3AF">"</tspan><tspan fill="#FFB627">model_revision</tspan><tspan fill="#9CA3AF">"</tspan>
+        <tspan fill="#6B7280">:</tspan>
+        <tspan fill="#9BC53D"> "34f52344e5ba…"</tspan>
+        <tspan fill="#6B7280">,</tspan>
+        <tspan x="32" y="72" fill="#9CA3AF">"</tspan><tspan fill="#FFB627">runner</tspan><tspan fill="#9CA3AF">"</tspan>
+        <tspan fill="#6B7280">:</tspan>
+        <tspan fill="#9BC53D"> "cortex_score.runners.tribev2.TribeV2Runner"</tspan>
+        <tspan x="16" y="90" fill="#6B7280">},</tspan>
+        <tspan x="16" y="108" fill="#9CA3AF">"</tspan><tspan fill="#5BC0EB">atlas</tspan><tspan fill="#9CA3AF">"</tspan>
+        <tspan fill="#6B7280">: {</tspan>
+        <tspan fill="#9CA3AF"> "</tspan><tspan fill="#FFB627">atlas_sha256</tspan><tspan fill="#9CA3AF">"</tspan>
+        <tspan fill="#6B7280">:</tspan>
+        <tspan fill="#9BC53D"> "f7938a4a…"</tspan>
+        <tspan fill="#6B7280"> },</tspan>
+        <tspan x="16" y="126" fill="#9CA3AF">"</tspan><tspan fill="#5BC0EB">normalization</tspan><tspan fill="#9CA3AF">"</tspan>
+        <tspan fill="#6B7280">: {</tspan>
+        <tspan fill="#9CA3AF"> "</tspan><tspan fill="#FFB627">scope</tspan><tspan fill="#9CA3AF">"</tspan>
+        <tspan fill="#6B7280">:</tspan>
+        <tspan fill="#9BC53D"> "within_video"</tspan>
+        <tspan fill="#6B7280"> },</tspan>
+        <tspan x="16" y="144" fill="#9CA3AF">"</tspan><tspan fill="#5BC0EB">input</tspan><tspan fill="#9CA3AF">"</tspan>
+        <tspan fill="#6B7280">: {</tspan>
+        <tspan fill="#9CA3AF"> "</tspan><tspan fill="#FFB627">filename</tspan><tspan fill="#9CA3AF">"</tspan>
+        <tspan fill="#6B7280">:</tspan>
+        <tspan fill="#9BC53D"> "clip.mp4"</tspan>
+        <tspan fill="#6B7280">, </tspan>
+        <tspan fill="#9CA3AF">"</tspan><tspan fill="#FFB627">absolute_path</tspan><tspan fill="#9CA3AF">"</tspan>
+        <tspan fill="#6B7280">: </tspan>
+        <tspan fill="#E55D87">null</tspan>
+        <tspan fill="#6B7280"> },</tspan>
+        <tspan x="16" y="162" fill="#9CA3AF">"</tspan><tspan fill="#5BC0EB">networks</tspan><tspan fill="#9CA3AF">"</tspan>
+        <tspan fill="#6B7280">: [</tspan>
+      </text>
+
+      <!-- 5 colored bars next to network entries -->
+      <g transform="translate(32, 168)">
+        <rect x="-8" y="6" width="4" height="14" rx="1" fill="#5BC0EB"/>
+        <text font-family="'JetBrains Mono', monospace" font-size="11.5">
+          <tspan x="0" y="18" fill="#6B7280">{ </tspan><tspan fill="#9CA3AF">"id"</tspan><tspan fill="#6B7280">: </tspan><tspan fill="#9BC53D">"visual"</tspan><tspan fill="#6B7280">,    </tspan><tspan fill="#9CA3AF">"mean_energy"</tspan><tspan fill="#6B7280">: </tspan><tspan fill="#5BC0EB">0.748</tspan><tspan fill="#6B7280"> },</tspan>
+        </text>
+      </g>
+      <g transform="translate(32, 186)">
+        <rect x="-8" y="6" width="4" height="14" rx="1" fill="#FFB627"/>
+        <text font-family="'JetBrains Mono', monospace" font-size="11.5">
+          <tspan x="0" y="18" fill="#6B7280">{ </tspan><tspan fill="#9CA3AF">"id"</tspan><tspan fill="#6B7280">: </tspan><tspan fill="#9BC53D">"language"</tspan><tspan fill="#6B7280">,  </tspan><tspan fill="#9CA3AF">"mean_energy"</tspan><tspan fill="#6B7280">: </tspan><tspan fill="#FFB627">0.890</tspan><tspan fill="#6B7280"> },</tspan>
+        </text>
+      </g>
+      <g transform="translate(32, 204)">
+        <rect x="-8" y="6" width="4" height="14" rx="1" fill="#E55D87"/>
+        <text font-family="'JetBrains Mono', monospace" font-size="11.5">
+          <tspan x="0" y="18" fill="#6B7280">{ </tspan><tspan fill="#9CA3AF">"id"</tspan><tspan fill="#6B7280">: </tspan><tspan fill="#9BC53D">"faces"</tspan><tspan fill="#6B7280">,     </tspan><tspan fill="#9CA3AF">"mean_energy"</tspan><tspan fill="#6B7280">: </tspan><tspan fill="#E55D87">0.838</tspan><tspan fill="#6B7280"> },</tspan>
+        </text>
+      </g>
+      <g transform="translate(32, 222)">
+        <rect x="-8" y="6" width="4" height="14" rx="1" fill="#9BC53D"/>
+        <text font-family="'JetBrains Mono', monospace" font-size="11.5">
+          <tspan x="0" y="18" fill="#6B7280">{ </tspan><tspan fill="#9CA3AF">"id"</tspan><tspan fill="#6B7280">: </tspan><tspan fill="#9BC53D">"attention"</tspan><tspan fill="#6B7280">, </tspan><tspan fill="#9CA3AF">"mean_energy"</tspan><tspan fill="#6B7280">: </tspan><tspan fill="#9BC53D">0.816</tspan><tspan fill="#6B7280"> },</tspan>
+        </text>
+      </g>
+      <g transform="translate(32, 240)">
+        <rect x="-8" y="6" width="4" height="14" rx="1" fill="#7E5BEF"/>
+        <text font-family="'JetBrains Mono', monospace" font-size="11.5">
+          <tspan x="0" y="18" fill="#6B7280">{ </tspan><tspan fill="#9CA3AF">"id"</tspan><tspan fill="#6B7280">: </tspan><tspan fill="#9BC53D">"motion"</tspan><tspan fill="#6B7280">,    </tspan><tspan fill="#9CA3AF">"mean_energy"</tspan><tspan fill="#6B7280">: </tspan><tspan fill="#7E5BEF">0.747</tspan><tspan fill="#6B7280"> }</tspan>
+        </text>
+      </g>
+
+      <text x="16" y="280" font-family="'JetBrains Mono', monospace" font-size="11.5" fill="#6B7280">]</text>
+      <text x="0" y="276" font-family="'JetBrains Mono', monospace" font-size="11.5" fill="#9CA3AF">}</text>
+    </g>
+  </g>
+
+  <!-- ============ RIGHT: audit checklist ============ -->
+  <g transform="translate(770, 116)" filter="url(#dropShadow)">
+    <rect width="390" height="340" rx="14" fill="#0F1626" stroke="#1F2937"/>
+    <text x="24" y="36" font-family="'JetBrains Mono', monospace" font-size="10" fill="#5BC0EB" letter-spacing="3">WHY IT'S TRUSTWORTHY</text>
+    <text x="24" y="62" font-family="Inter, system-ui, sans-serif" font-size="17" font-weight="700" fill="#F3F4F6">Six audit-grade properties</text>
+
+    <g transform="translate(24, 90)" font-family="Inter, system-ui, sans-serif" font-size="12">
+      <!-- Property 1 -->
+      <g>
+        <circle cx="10" cy="10" r="10" fill="#0A2A1A" stroke="#1A4F2E"/>
+        <text x="10" y="14" font-family="'JetBrains Mono', monospace" font-size="11" fill="#34D399" text-anchor="middle">1</text>
+        <text x="30" y="9" font-weight="700" fill="#F3F4F6">Pinned model revision</text>
+        <text x="30" y="26" font-family="'JetBrains Mono', monospace" font-size="10" fill="#9CA3AF">commit SHA in provenance</text>
+      </g>
+      <!-- Property 2 -->
+      <g transform="translate(0, 42)">
+        <circle cx="10" cy="10" r="10" fill="#0A2A1A" stroke="#1A4F2E"/>
+        <text x="10" y="14" font-family="'JetBrains Mono', monospace" font-size="11" fill="#34D399" text-anchor="middle">2</text>
+        <text x="30" y="9" font-weight="700" fill="#F3F4F6">Atlas SHA-256 fingerprints</text>
+        <text x="30" y="26" font-family="'JetBrains Mono', monospace" font-size="10" fill="#9CA3AF">schaefer + yeo + group source</text>
+      </g>
+      <!-- Property 3 -->
+      <g transform="translate(0, 84)">
+        <circle cx="10" cy="10" r="10" fill="#0A2A1A" stroke="#1A4F2E"/>
+        <text x="10" y="14" font-family="'JetBrains Mono', monospace" font-size="11" fill="#34D399" text-anchor="middle">3</text>
+        <text x="30" y="9" font-weight="700" fill="#F3F4F6">Explicit normalization scope</text>
+        <text x="30" y="26" font-family="'JetBrains Mono', monospace" font-size="10" fill="#9CA3AF">within_video — not cross-clip</text>
+      </g>
+      <!-- Property 4 -->
+      <g transform="translate(0, 126)">
+        <circle cx="10" cy="10" r="10" fill="#0A2A1A" stroke="#1A4F2E"/>
+        <text x="10" y="14" font-family="'JetBrains Mono', monospace" font-size="11" fill="#34D399" text-anchor="middle">4</text>
+        <text x="30" y="9" font-weight="700" fill="#F3F4F6">License restriction recorded</text>
+        <text x="30" y="26" font-family="'JetBrains Mono', monospace" font-size="10" fill="#9CA3AF">TRIBE v2 CC-BY-NC-4.0 in JSON</text>
+      </g>
+      <!-- Property 5 -->
+      <g transform="translate(0, 168)">
+        <circle cx="10" cy="10" r="10" fill="#0A2A1A" stroke="#1A4F2E"/>
+        <text x="10" y="14" font-family="'JetBrains Mono', monospace" font-size="11" fill="#34D399" text-anchor="middle">5</text>
+        <text x="30" y="9" font-weight="700" fill="#F3F4F6">PII-safe by default</text>
+        <text x="30" y="26" font-family="'JetBrains Mono', monospace" font-size="10" fill="#9CA3AF">basename only, abs path opt-in</text>
+      </g>
+      <!-- Property 6 -->
+      <g transform="translate(0, 210)">
+        <circle cx="10" cy="10" r="10" fill="#0A2A1A" stroke="#1A4F2E"/>
+        <text x="10" y="14" font-family="'JetBrains Mono', monospace" font-size="11" fill="#34D399" text-anchor="middle">6</text>
+        <text x="30" y="9" font-weight="700" fill="#F3F4F6">Deterministic result_id</text>
+        <text x="30" y="26" font-family="'JetBrains Mono', monospace" font-size="10" fill="#9CA3AF">SHA-256 of payload, audit-stable</text>
+      </g>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,349 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" width="1200" height="780">
+  <defs>
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="10"/>
+      <feOffset dy="4"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.4"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="780" fill="#0A0E1A"/>
+
+  <!-- 3x2 grid, cards are 380 x 370 with 20px gutters -->
+
+  <!-- ========== ROW 1 ========== -->
+
+  <!-- Card 1: CPU-only tier -->
+  <g transform="translate(20, 20)" filter="url(#cardShadow)">
+    <rect width="380" height="370" rx="16" fill="#0F1626" stroke="#1F2937"/>
+    <text x="24" y="42" font-family="'JetBrains Mono', monospace" font-size="11" fill="#5BC0EB" letter-spacing="3">TIER A</text>
+    <text x="24" y="78" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="700" fill="#F3F4F6">CPU-only · pure NumPy</text>
+    <text x="24" y="106" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#9CA3AF">Already have predictions?</text>
+    <text x="24" y="124" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#9CA3AF">Score on a laptop in milliseconds.</text>
+
+    <!-- Code block -->
+    <g transform="translate(24, 148)">
+      <rect width="332" height="180" rx="10" fill="#070A12" stroke="#1F2937"/>
+      <text font-family="'JetBrains Mono', monospace" font-size="11.5">
+        <tspan x="16" y="26" fill="#7E5BEF">from</tspan>
+        <tspan fill="#D1D5DB"> cortex_score </tspan>
+        <tspan fill="#7E5BEF">import</tspan>
+        <tspan fill="#D1D5DB"> (</tspan>
+        <tspan x="32" y="44" fill="#FFB627">score_from_predictions,</tspan>
+        <tspan x="16" y="62" fill="#D1D5DB">)</tspan>
+
+        <tspan x="16" y="92" fill="#D1D5DB">result = </tspan>
+        <tspan fill="#FFB627">score_from_predictions</tspan>
+        <tspan fill="#D1D5DB">(</tspan>
+        <tspan x="32" y="110" fill="#D1D5DB">preds, mesh=</tspan>
+        <tspan fill="#9BC53D">"fsaverage5"</tspan>
+        <tspan fill="#D1D5DB">,</tspan>
+        <tspan x="32" y="128" fill="#D1D5DB">tr_seconds=</tspan>
+        <tspan fill="#E55D87">1.0</tspan>
+        <tspan fill="#D1D5DB">, hrf_lag_seconds=</tspan>
+        <tspan fill="#E55D87">5.0</tspan>
+        <tspan fill="#D1D5DB">,</tspan>
+        <tspan x="32" y="146" fill="#D1D5DB">model_id=</tspan>
+        <tspan fill="#9BC53D">"facebook/tribev2"</tspan>
+        <tspan fill="#D1D5DB">,</tspan>
+        <tspan x="16" y="164" fill="#D1D5DB">)</tspan>
+      </text>
+    </g>
+
+    <!-- Bottom badge -->
+    <g transform="translate(24, 340)">
+      <rect width="200" height="22" rx="11" fill="#0A2A1A" stroke="#1A4F2E"/>
+      <text x="100" y="15" font-family="'JetBrains Mono', monospace" font-size="10" fill="#34D399" text-anchor="middle">⚡  &lt;50ms  ·  no GPU required</text>
+    </g>
+  </g>
+
+  <!-- Card 2: 5-network rollup -->
+  <g transform="translate(410, 20)" filter="url(#cardShadow)">
+    <rect width="380" height="370" rx="16" fill="#0F1626" stroke="#1F2937"/>
+    <text x="24" y="42" font-family="'JetBrains Mono', monospace" font-size="11" fill="#FFB627" letter-spacing="3">5-NETWORK ROLLUP</text>
+    <text x="24" y="78" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="700" fill="#F3F4F6">Five brain networks</text>
+    <text x="24" y="106" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#9CA3AF">Yeo-17 parcels grouped into</text>
+    <text x="24" y="124" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#9CA3AF">five auditable dashboard networks.</text>
+
+    <!-- Bars -->
+    <g transform="translate(24, 148)" font-family="'JetBrains Mono', monospace" font-size="11">
+      <!-- visual 0.748 -->
+      <g transform="translate(0, 0)">
+        <text x="0" y="11" fill="#D1D5DB">visual</text>
+        <rect x="84" y="0" width="180" height="14" rx="3" fill="#131826" stroke="#1F2937"/>
+        <rect x="84" y="0" width="135" height="14" rx="3" fill="#5BC0EB"/>
+        <text x="272" y="11" fill="#9CA3AF">0.748</text>
+      </g>
+      <!-- language 0.890 (max) -->
+      <g transform="translate(0, 30)">
+        <text x="0" y="11" fill="#D1D5DB">language</text>
+        <rect x="84" y="0" width="180" height="14" rx="3" fill="#131826" stroke="#1F2937"/>
+        <rect x="84" y="0" width="180" height="14" rx="3" fill="#FFB627"/>
+        <text x="272" y="11" fill="#FFB627">0.890</text>
+      </g>
+      <!-- faces 0.838 -->
+      <g transform="translate(0, 60)">
+        <text x="0" y="11" fill="#D1D5DB">faces</text>
+        <rect x="84" y="0" width="180" height="14" rx="3" fill="#131826" stroke="#1F2937"/>
+        <rect x="84" y="0" width="169" height="14" rx="3" fill="#E55D87"/>
+        <text x="272" y="11" fill="#9CA3AF">0.838</text>
+      </g>
+      <!-- attention 0.816 -->
+      <g transform="translate(0, 90)">
+        <text x="0" y="11" fill="#D1D5DB">attention</text>
+        <rect x="84" y="0" width="180" height="14" rx="3" fill="#131826" stroke="#1F2937"/>
+        <rect x="84" y="0" width="165" height="14" rx="3" fill="#9BC53D"/>
+        <text x="272" y="11" fill="#9CA3AF">0.816</text>
+      </g>
+      <!-- motion 0.747 -->
+      <g transform="translate(0, 120)">
+        <text x="0" y="11" fill="#D1D5DB">motion</text>
+        <rect x="84" y="0" width="180" height="14" rx="3" fill="#131826" stroke="#1F2937"/>
+        <rect x="84" y="0" width="135" height="14" rx="3" fill="#7E5BEF"/>
+        <text x="272" y="11" fill="#9CA3AF">0.747</text>
+      </g>
+    </g>
+
+    <!-- Axis labels -->
+    <g transform="translate(108, 296)" font-family="'JetBrains Mono', monospace" font-size="9" fill="#4B5563">
+      <text x="0" y="0">0.0</text>
+      <text x="170" y="0" text-anchor="end">1.0</text>
+    </g>
+
+    <!-- Bottom badge -->
+    <g transform="translate(24, 320)">
+      <rect width="332" height="34" rx="8" fill="#070A12" stroke="#1F2937"/>
+      <text x="14" y="14" font-family="'JetBrains Mono', monospace" font-size="9" fill="#6B7280" letter-spacing="2">REAL SMOKE-TEST OUTPUT</text>
+      <text x="14" y="28" font-family="'JetBrains Mono', monospace" font-size="10" fill="#9CA3AF">5.3s clip · 6 segments · within-video z-score</text>
+    </g>
+  </g>
+
+  <!-- Card 3: Provenance -->
+  <g transform="translate(800, 20)" filter="url(#cardShadow)">
+    <rect width="380" height="370" rx="16" fill="#0F1626" stroke="#1F2937"/>
+    <text x="24" y="42" font-family="'JetBrains Mono', monospace" font-size="11" fill="#E55D87" letter-spacing="3">PROVENANCE</text>
+    <text x="24" y="78" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="700" fill="#F3F4F6">Every score is auditable</text>
+    <text x="24" y="106" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#9CA3AF">Model revision, atlas SHAs,</text>
+    <text x="24" y="124" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#9CA3AF">license — embedded in every JSON.</text>
+
+    <!-- JSON tree -->
+    <g transform="translate(24, 148)">
+      <rect width="332" height="170" rx="10" fill="#070A12" stroke="#1F2937"/>
+      <text font-family="'JetBrains Mono', monospace" font-size="11">
+        <tspan x="14" y="22" fill="#D1D5DB">"provenance"</tspan>
+        <tspan fill="#6B7280">: {</tspan>
+        <tspan x="28" y="40" fill="#9CA3AF">"model_id"</tspan>
+        <tspan fill="#6B7280">: </tspan>
+        <tspan fill="#9BC53D">"facebook/tribev2"</tspan>
+        <tspan x="28" y="58" fill="#9CA3AF">"model_revision"</tspan>
+        <tspan fill="#6B7280">:</tspan>
+        <tspan x="28" y="74" fill="#FFB627">  "34f52344e5ba…"</tspan>
+        <tspan x="28" y="92" fill="#9CA3AF">"schema_version"</tspan>
+        <tspan fill="#6B7280">: </tspan>
+        <tspan fill="#9BC53D">"1.0"</tspan>
+        <tspan x="28" y="110" fill="#9CA3AF">"runner"</tspan>
+        <tspan fill="#6B7280">:</tspan>
+        <tspan x="28" y="126" fill="#5BC0EB">  TribeV2Runner</tspan>
+        <tspan x="28" y="144" fill="#9CA3AF">"torch_version"</tspan>
+        <tspan fill="#6B7280">: </tspan>
+        <tspan fill="#9BC53D">"2.6.0+cu124"</tspan>
+        <tspan x="14" y="160" fill="#6B7280">}</tspan>
+      </text>
+    </g>
+
+    <!-- Bottom badge -->
+    <g transform="translate(24, 330)">
+      <rect width="240" height="22" rx="11" fill="#0A2A1A" stroke="#1A4F2E"/>
+      <text x="120" y="15" font-family="'JetBrains Mono', monospace" font-size="10" fill="#34D399" text-anchor="middle">SHA-256 result_id · schema 1.0</text>
+    </g>
+  </g>
+
+  <!-- ========== ROW 2 ========== -->
+
+  <!-- Card 4: Atlas integrity -->
+  <g transform="translate(20, 410)" filter="url(#cardShadow)">
+    <rect width="380" height="370" rx="16" fill="#0F1626" stroke="#1F2937"/>
+    <text x="24" y="42" font-family="'JetBrains Mono', monospace" font-size="11" fill="#9BC53D" letter-spacing="3">ATLAS  ·  BUNDLED DATA</text>
+    <text x="24" y="78" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="700" fill="#F3F4F6">SHA-256 fingerprints</text>
+    <text x="24" y="106" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#9CA3AF">Schaefer-400 + Yeo-17 verified</text>
+    <text x="24" y="124" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#9CA3AF">on every load. No network round-trip.</text>
+
+    <!-- File grid -->
+    <g transform="translate(24, 148)" font-family="'JetBrains Mono', monospace" font-size="10.5">
+      <g>
+        <text x="0" y="0" fill="#34D399">✓</text>
+        <text x="18" y="0" fill="#D1D5DB">schaefer400_vertex.npy</text>
+        <text x="332" y="0" fill="#6B7280" text-anchor="end">f7938a4a…</text>
+      </g>
+      <g transform="translate(0, 22)">
+        <text x="0" y="0" fill="#34D399">✓</text>
+        <text x="18" y="0" fill="#D1D5DB">yeo17_vertex.npy</text>
+        <text x="332" y="0" fill="#6B7280" text-anchor="end">c7dde17b…</text>
+      </g>
+      <g transform="translate(0, 44)">
+        <text x="0" y="0" fill="#34D399">✓</text>
+        <text x="18" y="0" fill="#D1D5DB">schaefer400_to_yeo17.npy</text>
+        <text x="332" y="0" fill="#6B7280" text-anchor="end">a9632e83…</text>
+      </g>
+      <g transform="translate(0, 66)">
+        <text x="0" y="0" fill="#34D399">✓</text>
+        <text x="18" y="0" fill="#D1D5DB">labels_schaefer400.json</text>
+        <text x="332" y="0" fill="#6B7280" text-anchor="end">ca9e96eb…</text>
+      </g>
+      <g transform="translate(0, 88)">
+        <text x="0" y="0" fill="#34D399">✓</text>
+        <text x="18" y="0" fill="#D1D5DB">labels_yeo17.json</text>
+        <text x="332" y="0" fill="#6B7280" text-anchor="end">1e6ae335…</text>
+      </g>
+      <g transform="translate(0, 110)">
+        <text x="0" y="0" fill="#34D399">✓</text>
+        <text x="18" y="0" fill="#D1D5DB">network_groups.json</text>
+        <text x="332" y="0" fill="#6B7280" text-anchor="end">36faa271…</text>
+      </g>
+    </g>
+
+    <!-- Size summary -->
+    <g transform="translate(24, 296)">
+      <rect width="332" height="38" rx="8" fill="#070A12" stroke="#1F2937"/>
+      <text x="14" y="16" font-family="'JetBrains Mono', monospace" font-size="9" fill="#6B7280" letter-spacing="2">TOTAL PAYLOAD</text>
+      <text x="14" y="32" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="600" fill="#F3F4F6">337 KB <tspan fill="#9CA3AF" font-weight="400">— bundled in the wheel</tspan></text>
+    </g>
+
+    <!-- Bottom badge -->
+    <g transform="translate(24, 344)">
+      <rect width="240" height="20" rx="10" fill="#0A2A1A" stroke="#1A4F2E"/>
+      <text x="120" y="14" font-family="'JetBrains Mono', monospace" font-size="9" fill="#34D399" text-anchor="middle">Offline-first · zero R2 / HF round-trip</text>
+    </g>
+  </g>
+
+  <!-- Card 5: Two-tier cache -->
+  <g transform="translate(410, 410)" filter="url(#cardShadow)">
+    <rect width="380" height="370" rx="16" fill="#0F1626" stroke="#1F2937"/>
+    <text x="24" y="42" font-family="'JetBrains Mono', monospace" font-size="11" fill="#7E5BEF" letter-spacing="3">CACHE  ·  TWO-TIER</text>
+    <text x="24" y="78" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="700" fill="#F3F4F6">Predictions + scores</text>
+    <text x="24" y="106" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#9CA3AF">A library upgrade reuses the</text>
+    <text x="24" y="124" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#9CA3AF">expensive TRIBE forward pass.</text>
+
+    <!-- Cache diagram -->
+    <g transform="translate(24, 152)" font-family="'JetBrains Mono', monospace" font-size="10">
+      <!-- Prediction cache box -->
+      <g>
+        <rect x="0" y="0" width="150" height="78" rx="10" fill="#1A1330" stroke="#7E5BEF" stroke-width="1.5"/>
+        <text x="75" y="20" fill="#7E5BEF" text-anchor="middle" letter-spacing="2">PREDICTION CACHE</text>
+        <line x1="14" y1="28" x2="136" y2="28" stroke="#2E2155"/>
+        <text x="14" y="44" fill="#D1D5DB">key includes:</text>
+        <text x="14" y="58" fill="#9CA3AF">  · input sha256</text>
+        <text x="14" y="70" fill="#9CA3AF">  · tribev2 SHA</text>
+      </g>
+
+      <!-- Arrow -->
+      <line x1="156" y1="39" x2="180" y2="39" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arr1)"/>
+
+      <!-- Score cache box -->
+      <g transform="translate(184, 0)">
+        <rect x="0" y="0" width="148" height="78" rx="10" fill="#0F2620" stroke="#34D399" stroke-width="1.5"/>
+        <text x="74" y="20" fill="#34D399" text-anchor="middle" letter-spacing="2">SCORE CACHE</text>
+        <line x1="14" y1="28" x2="134" y2="28" stroke="#1F4738"/>
+        <text x="14" y="44" fill="#D1D5DB">key includes:</text>
+        <text x="14" y="58" fill="#9CA3AF">  · pred key</text>
+        <text x="14" y="70" fill="#9CA3AF">  · atlas SHA</text>
+      </g>
+
+      <!-- Properties below -->
+      <g transform="translate(0, 96)">
+        <rect width="332" height="28" rx="8" fill="#070A12" stroke="#1F2937"/>
+        <text x="14" y="11" font-size="9" fill="#6B7280" letter-spacing="2">WRITE GUARANTEES</text>
+        <text x="14" y="23" font-size="10" fill="#D1D5DB">atomic os.replace · UUID4 tmp · concurrent-safe</text>
+      </g>
+
+      <g transform="translate(0, 132)">
+        <rect width="332" height="28" rx="8" fill="#070A12" stroke="#1F2937"/>
+        <text x="14" y="11" font-size="9" fill="#6B7280" letter-spacing="2">INVALIDATION</text>
+        <text x="14" y="23" font-size="10" fill="#D1D5DB">9-input hash · cache_manifest.json · --refresh</text>
+      </g>
+    </g>
+
+    <defs>
+      <marker id="arr1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#4B5563"/>
+      </marker>
+    </defs>
+
+    <!-- Bottom badge -->
+    <g transform="translate(24, 332)">
+      <rect width="332" height="22" rx="11" fill="#1A0F2F" stroke="#3A2858"/>
+      <text x="166" y="15" font-family="'JetBrains Mono', monospace" font-size="10" fill="#A78BFA" text-anchor="middle">~/.cache/cortex-score  ·  XDG-compliant</text>
+    </g>
+  </g>
+
+  <!-- Card 6: Pydantic schema -->
+  <g transform="translate(800, 410)" filter="url(#cardShadow)">
+    <rect width="380" height="370" rx="16" fill="#0F1626" stroke="#1F2937"/>
+    <text x="24" y="42" font-family="'JetBrains Mono', monospace" font-size="11" fill="#5BC0EB" letter-spacing="3">SCHEMA  ·  PYDANTIC V2</text>
+    <text x="24" y="78" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="700" fill="#F3F4F6">Strict JSON contract</text>
+    <text x="24" y="106" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#9CA3AF">extra="forbid", frozen, validated.</text>
+    <text x="24" y="124" font-family="Inter, system-ui, sans-serif" font-size="13" fill="#9CA3AF">Exports JSON Schema for downstream.</text>
+
+    <!-- Field list -->
+    <g transform="translate(24, 148)" font-family="'JetBrains Mono', monospace" font-size="10.5">
+      <g>
+        <text x="0" y="0" fill="#9CA3AF">ScoreResult</text>
+        <text x="100" y="0" fill="#6B7280">→ top-level</text>
+      </g>
+      <g transform="translate(8, 22)">
+        <text x="0" y="0" fill="#E55D87">├</text>
+        <text x="14" y="0" fill="#D1D5DB">input</text>
+        <text x="92" y="0" fill="#5BC0EB">InputMeta</text>
+      </g>
+      <g transform="translate(8, 38)">
+        <text x="0" y="0" fill="#E55D87">├</text>
+        <text x="14" y="0" fill="#D1D5DB">timing</text>
+        <text x="92" y="0" fill="#5BC0EB">TimingMeta</text>
+      </g>
+      <g transform="translate(8, 54)">
+        <text x="0" y="0" fill="#E55D87">├</text>
+        <text x="14" y="0" fill="#D1D5DB">normalization</text>
+        <text x="120" y="0" fill="#5BC0EB">Normalization</text>
+      </g>
+      <g transform="translate(8, 70)">
+        <text x="0" y="0" fill="#E55D87">├</text>
+        <text x="14" y="0" fill="#D1D5DB">atlas</text>
+        <text x="92" y="0" fill="#5BC0EB">AtlasMeta</text>
+      </g>
+      <g transform="translate(8, 86)">
+        <text x="0" y="0" fill="#E55D87">├</text>
+        <text x="14" y="0" fill="#D1D5DB">provenance</text>
+        <text x="120" y="0" fill="#5BC0EB">ProvenanceMeta</text>
+      </g>
+      <g transform="translate(8, 102)">
+        <text x="0" y="0" fill="#E55D87">├</text>
+        <text x="14" y="0" fill="#D1D5DB">license_restrictions</text>
+        <text x="178" y="0" fill="#5BC0EB">tuple</text>
+      </g>
+      <g transform="translate(8, 118)">
+        <text x="0" y="0" fill="#E55D87">├</text>
+        <text x="14" y="0" fill="#D1D5DB">warnings</text>
+        <text x="120" y="0" fill="#5BC0EB">tuple</text>
+      </g>
+      <g transform="translate(8, 134)">
+        <text x="0" y="0" fill="#E55D87">└</text>
+        <text x="14" y="0" fill="#D1D5DB">networks</text>
+        <text x="120" y="0" fill="#FFB627">tuple[NetworkScore, …]</text>
+      </g>
+    </g>
+
+    <!-- Invariant strip -->
+    <g transform="translate(24, 304)">
+      <rect width="332" height="28" rx="8" fill="#070A12" stroke="#1F2937"/>
+      <text x="14" y="11" font-family="'JetBrains Mono', monospace" font-size="9" fill="#6B7280" letter-spacing="2">INVARIANTS</text>
+      <text x="14" y="23" font-family="'JetBrains Mono', monospace" font-size="10" fill="#D1D5DB">len(networks) == 5 · ordering fixed · ts == n_segments</text>
+    </g>
+
+    <!-- Bottom badge -->
+    <g transform="translate(24, 340)">
+      <rect width="240" height="20" rx="10" fill="#0F1E2A" stroke="#1F4250"/>
+      <text x="120" y="14" font-family="'JetBrains Mono', monospace" font-size="9" fill="#5BC0EB" text-anchor="middle">cortex-score schema &gt; schema.json</text>
+    </g>
+  </g>
+</svg>
