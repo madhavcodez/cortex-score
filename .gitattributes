@@ -1,0 +1,17 @@
+# Default: auto-detect text and force LF line endings on checkout/commit.
+# Without this, Windows clones flip JSON/Python text files to CRLF and the
+# bundled-atlas SHA-256 fingerprints in src/cortex_score/data/manifest.json
+# diverge from what Linux CI sees.
+* text=auto eol=lf
+
+# Binary atlas data — git must never touch these bytes.
+src/cortex_score/data/*.npy binary
+
+# JSON data files participate in SHA-256 fingerprinting; force LF so the
+# bytes are deterministic across Windows and Linux checkouts.
+src/cortex_score/data/*.json text eol=lf
+
+# Windows-native scripts keep CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

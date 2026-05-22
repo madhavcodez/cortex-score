@@ -26,14 +26,14 @@
     {
       "name": "labels_schaefer400.json",
       "purpose": "human-readable parcel labels for Schaefer-400 (list of 400 strings)",
-      "sha256": "63bffa4e18037b30280d02523b4442afb2c56b00cafc02c63a707c435b17af72",
-      "size_bytes": 14282
+      "sha256": "ca9e96eb3c28093964d5610cf48ed0e71232d5141f3f5f5c9bca25dea937adfa",
+      "size_bytes": 13881
     },
     {
       "name": "labels_yeo17.json",
       "purpose": "human-readable network labels for Yeo-17 (list of 17 strings)",
-      "sha256": "7832c882cc579dacffadbec19ab80c6a053b27c39b381fd22fee430983133c4f",
-      "size_bytes": 252
+      "sha256": "1e6ae335ffcf394dae789bf4a06e0c862fb89304afc5de983d452ef1b1041588",
+      "size_bytes": 234
     },
     {
       "name": "network_groups.json",
