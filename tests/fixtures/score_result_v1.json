@@ -1,0 +1,228 @@
+{
+  "schema_version": "1.0",
+  "result_id": "70e1779f5ff3deea2533137926aa9637a1e333587b7936251cab1d6810a252df",
+  "created_at": "2026-05-22T01:09:14.054342Z",
+  "framing": "Score any video for predicted cortical engagement across 5 brain networks (visual, language, faces, attention, motion). Built on Meta FAIR's TRIBE v2.",
+  "framing_scientific": "cortex-score summarizes TRIBE v2 predicted cortical responses for any video across five Cortexia-defined network groups.",
+  "framing_disclaimer": "cortex-score does not measure real viewer engagement. It summarizes predicted fMRI-like responses from a pretrained brain-encoding model for an average subject.",
+  "input": {
+    "path": null,
+    "content_sha256": null,
+    "duration_s": null,
+    "fps": null,
+    "resolution": null
+  },
+  "timing": {
+    "tr_seconds": 1.0,
+    "hrf_lag_seconds": 5.0,
+    "n_segments": 6
+  },
+  "normalization": {
+    "method": "zscore",
+    "scope": "within_video",
+    "epsilon": 1e-6,
+    "reference_id": null
+  },
+  "atlas": {
+    "mesh": "fsaverage5",
+    "n_vertices": 20484,
+    "atlas_version": "schaefer2018-400-yeo17-fsaverage5",
+    "atlas_sha256": "f7938a4a6a6317d1f07e5bea0b16ce4dc33b77143e6e8d6a1e22062b00dac8cf",
+    "yeo_atlas_sha256": "c7dde17b707abc93c034eff71207a85aaaaf99a4b5e16f0f0c2ac5ba4c6f0d31",
+    "network_groups_sha256": "36faa271e9b4d8c9d8e17671c19cb31746c27ff8fa1a000b679405f76fd485bf",
+    "network_group_source": "cortexia-network-groups-v1"
+  },
+  "provenance": {
+    "cortex_score_version": "0.0.0+local",
+    "schema_version": "1.0",
+    "metrics_version": "1.0",
+    "serialization_version": "1.0",
+    "model_id": "facebook/tribev2",
+    "model_revision": "snapshot-test",
+    "tribev2_package_version": null,
+    "runner": "external",
+    "python_version": "3.11.15",
+    "torch_version": null,
+    "cuda_available": null,
+    "device": null
+  },
+  "license_restrictions": [
+    {
+      "component": "TRIBE v2",
+      "license": "CC-BY-NC-4.0",
+      "note": "Full inference path is restricted to non-commercial use. See https://huggingface.co/facebook/tribev2 for the license text."
+    }
+  ],
+  "warnings": [],
+  "networks": [
+    {
+      "id": "visual",
+      "label": "Visual cortex",
+      "description": "Visual response features: color, shape, contrast, and on-screen motion.",
+      "color": "#5BC0EB",
+      "yeo_indices": [
+        0,
+        1
+      ],
+      "yeo_labels": [
+        "VisCent",
+        "VisPeri"
+      ],
+      "mean_energy": 0.8287608027458191,
+      "peak_energy": 1.559786319732666,
+      "energy_timeseries": [
+        0.6228652000427246,
+        1.0746891498565674,
+        0.7673207521438599,
+        0.14142099022865295,
+        1.559786319732666,
+        0.8064824342727661
+      ],
+      "mean_z_timeseries": [
+        -0.6228652000427246,
+        0.22013810276985168,
+        -0.7673207521438599,
+        -0.14142099022865295,
+        1.559786319732666,
+        -0.2483176290988922
+      ],
+      "group_definition_sha256": "36faa271e9b4d8c9d8e17671c19cb31746c27ff8fa1a000b679405f76fd485bf"
+    },
+    {
+      "id": "language",
+      "label": "Language",
+      "description": "Speech, text, and semantic-context response features.",
+      "color": "#FFB627",
+      "yeo_indices": [
+        11,
+        16
+      ],
+      "yeo_labels": [
+        "ContB",
+        "TempPar"
+      ],
+      "mean_energy": 0.8742197155952454,
+      "peak_energy": 1.5794942378997803,
+      "energy_timeseries": [
+        0.7758251428604126,
+        0.9624804854393005,
+        0.4950818717479706,
+        1.5794942378997803,
+        0.6829809546470642,
+        0.7494561672210693
+      ],
+      "mean_z_timeseries": [
+        0.7758251428604126,
+        0.6072346568107605,
+        0.4950818717479706,
+        -1.5794942378997803,
+        -0.006269991397857666,
+        -0.2923774719238281
+      ],
+      "group_definition_sha256": "36faa271e9b4d8c9d8e17671c19cb31746c27ff8fa1a000b679405f76fd485bf"
+    },
+    {
+      "id": "faces",
+      "label": "Faces and social",
+      "description": "Social-context response features used as an exploratory face-related summary.",
+      "color": "#E55D87",
+      "yeo_indices": [
+        7,
+        15
+      ],
+      "yeo_labels": [
+        "SalVentAttnB",
+        "DefaultC"
+      ],
+      "mean_energy": 0.8355093002319336,
+      "peak_energy": 1.3056468963623047,
+      "energy_timeseries": [
+        1.2084673643112183,
+        0.5921932458877563,
+        0.5359973907470703,
+        0.7880392074584961,
+        1.3056468963623047,
+        0.5827116370201111
+      ],
+      "mean_z_timeseries": [
+        1.2084673643112183,
+        -0.5921932458877563,
+        -0.49098899960517883,
+        -0.7880392074584961,
+        0.08004248142242432,
+        0.5827116370201111
+      ],
+      "group_definition_sha256": "36faa271e9b4d8c9d8e17671c19cb31746c27ff8fa1a000b679405f76fd485bf"
+    },
+    {
+      "id": "attention",
+      "label": "Attention",
+      "description": "Dorsal and ventral attention/control response features.",
+      "color": "#9BC53D",
+      "yeo_indices": [
+        4,
+        5,
+        6,
+        10
+      ],
+      "yeo_labels": [
+        "DorsAttnA",
+        "DorsAttnB",
+        "SalVentAttnA",
+        "ContA"
+      ],
+      "mean_energy": 0.8436012268066406,
+      "peak_energy": 0.9691197872161865,
+      "energy_timeseries": [
+        0.7921444177627563,
+        0.9294591546058655,
+        0.766670286655426,
+        0.7866710424423218,
+        0.8175429105758667,
+        0.9691197872161865
+      ],
+      "mean_z_timeseries": [
+        0.7921444177627563,
+        -0.09630359709262848,
+        0.12695623934268951,
+        -0.5798883438110352,
+        0.13842356204986572,
+        -0.38133224844932556
+      ],
+      "group_definition_sha256": "36faa271e9b4d8c9d8e17671c19cb31746c27ff8fa1a000b679405f76fd485bf"
+    },
+    {
+      "id": "motion",
+      "label": "Motion",
+      "description": "Somatomotor and action-related response features.",
+      "color": "#7E5BEF",
+      "yeo_indices": [
+        2,
+        3
+      ],
+      "yeo_labels": [
+        "SomMotA",
+        "SomMotB"
+      ],
+      "mean_energy": 0.8226602077484131,
+      "peak_energy": 1.690833330154419,
+      "energy_timeseries": [
+        0.897856593132019,
+        0.6666967868804932,
+        0.8900989294052124,
+        1.690833330154419,
+        0.17931580543518066,
+        0.61115962266922
+      ],
+      "mean_z_timeseries": [
+        0.897856593132019,
+        -0.6666967868804932,
+        -0.8900989294052124,
+        0.012754261493682861,
+        0.03502534329891205,
+        0.61115962266922
+      ],
+      "group_definition_sha256": "36faa271e9b4d8c9d8e17671c19cb31746c27ff8fa1a000b679405f76fd485bf"
+    }
+  ]
+}

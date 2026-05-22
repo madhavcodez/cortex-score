@@ -1,0 +1,87 @@
+cff-version: 1.2.0
+title: "cortex-score"
+message: "If you use this software, please cite both this package and the underlying TRIBE v2 brain-encoding model."
+type: software
+authors:
+  - given-names: Madhav
+    family-names: Chauhan
+repository-code: "https://github.com/madhavcodez/cortex-score"
+abstract: >-
+  cortex-score packages the TRIBE v2 brain-encoding pipeline as an installable
+  Python library that summarizes predicted cortical responses for any video
+  across five Cortexia-defined network groups (visual, language, faces,
+  attention, motion).
+keywords:
+  - fmri
+  - brain-encoding
+  - neuroimaging
+  - video-analysis
+  - tribe
+license: MIT
+references:
+  - type: software
+    title: "TRIBE v2"
+    authors:
+      - name: "Meta FAIR"
+    repository-code: "https://github.com/facebookresearch/tribev2"
+    license: CC-BY-NC-4.0
+  - type: article
+    title: "Local-Global Parcellation of the Human Cerebral Cortex from Intrinsic Functional Connectivity MRI"
+    authors:
+      - family-names: Schaefer
+        given-names: A.
+      - family-names: Kong
+        given-names: R.
+      - family-names: Gordon
+        given-names: E. M.
+      - family-names: Laumann
+        given-names: T. O.
+      - family-names: Zuo
+        given-names: X.-N.
+      - family-names: Holmes
+        given-names: A. J.
+      - family-names: Eickhoff
+        given-names: S. B.
+      - family-names: Yeo
+        given-names: B. T. T.
+    journal: "Cerebral Cortex"
+    volume: 28
+    issue: 9
+    year: 2018
+    start: 3095
+    end: 3114
+  - type: article
+    title: "The organization of the human cerebral cortex estimated by intrinsic functional connectivity"
+    authors:
+      - family-names: Yeo
+        given-names: B. T. T.
+      - family-names: Krienen
+        given-names: F. M.
+      - family-names: Sepulcre
+        given-names: J.
+      - family-names: Sabuncu
+        given-names: M. R.
+      - family-names: Lashkari
+        given-names: D.
+      - family-names: Hollinshead
+        given-names: M.
+      - family-names: Roffman
+        given-names: J. L.
+      - family-names: Smoller
+        given-names: J. W.
+      - family-names: Zollei
+        given-names: L.
+      - family-names: Polimeni
+        given-names: J. R.
+      - family-names: Fischl
+        given-names: B.
+      - family-names: Liu
+        given-names: H.
+      - family-names: Buckner
+        given-names: R. L.
+    journal: "Journal of Neurophysiology"
+    volume: 106
+    issue: 3
+    year: 2011
+    start: 1125
+    end: 1165

@@ -1,0 +1,205 @@
+[build-system]
+requires = ["hatchling>=1.21", "hatch-vcs>=0.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cortex-score"
+description = "Score any video for predicted cortical engagement across 5 brain networks (visual, language, faces, attention, motion). Built on Meta FAIR's TRIBE v2 encoding model."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Madhav Chauhan" }]
+keywords = [
+  "fmri",
+  "brain-encoding",
+  "neuroimaging",
+  "video-analysis",
+  "tribe",
+  "schaefer",
+  "yeo",
+  "cortical-response",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Scientific/Engineering :: Medical Science Apps.",
+  "Typing :: Typed",
+]
+
+# Base install stays lean: anything the CPU-only `score_from_predictions`
+# path can run with. Heavy ML deps live in `gpu-deps`; TRIBE v2 itself is
+# NOT here because PyPI does not accept direct-URL deps in published
+# package metadata (PEP 440 direct refs are blocked on upload). See
+# requirements/tribev2-gpu.txt and docs/install-gpu.md.
+dependencies = [
+  "numpy>=1.26,<3",
+  "pydantic>=2.7,<3",
+  "platformdirs>=4,<5",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+cli = [
+  "typer>=0.12,<1",
+]
+gpu-deps = [
+  # The TRIBE v2 dependency-matrix-of-record as of 2026-05-11 commit
+  # 34f52344e5ba96660fac877393e1954e399d3ef3 (matches
+  # facebookresearch/tribev2 main pyproject.toml). TRIBE itself is
+  # installed separately from requirements/tribev2-gpu.txt.
+  "torch>=2.5.1,<2.7",
+  "torchvision>=0.20,<0.22",
+  "transformers>=4.45",
+  "huggingface-hub>=0.24",
+  "moviepy>=2.2.1",
+  "uv>=0.5",  # tribev2.eventstransforms shells out to `uvx whisperx`
+]
+viz = [
+  # MZ3 scalar overlay export is pure struct/zlib; no extra runtime dep
+  # required. nibabel is added only when callers also want NIfTI export.
+  "nibabel>=5.2",
+]
+dev = [
+  "pytest>=8",
+  "pytest-cov>=5",
+  "hypothesis>=6.100",
+  "ruff>=0.6",
+  "mypy>=1.10",
+  "build>=1.2",
+  "twine>=5",
+]
+
+[project.scripts]
+cortex-score = "cortex_score.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/madhavcodez/cortex-score"
+Documentation = "https://github.com/madhavcodez/cortex-score#readme"
+Repository = "https://github.com/madhavcodez/cortex-score"
+Issues = "https://github.com/madhavcodez/cortex-score/issues"
+
+# ---- Hatch build configuration ---------------------------------------
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/cortex_score/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cortex_score"]
+
+# Force atlas data + license notices into both wheel and sdist. The
+# `packages` glob picks up *.py automatically; binary data needs an
+# explicit include.
+[tool.hatch.build.targets.wheel.force-include]
+"src/cortex_score/data/schaefer400_vertex.npy" = "cortex_score/data/schaefer400_vertex.npy"
+"src/cortex_score/data/yeo17_vertex.npy" = "cortex_score/data/yeo17_vertex.npy"
+"src/cortex_score/data/schaefer400_to_yeo17.npy" = "cortex_score/data/schaefer400_to_yeo17.npy"
+"src/cortex_score/data/labels_schaefer400.json" = "cortex_score/data/labels_schaefer400.json"
+"src/cortex_score/data/labels_yeo17.json" = "cortex_score/data/labels_yeo17.json"
+"src/cortex_score/data/network_groups.json" = "cortex_score/data/network_groups.json"
+"src/cortex_score/data/manifest.json" = "cortex_score/data/manifest.json"
+"LICENSE" = "cortex_score/LICENSE"
+"LICENSE-THIRD-PARTY.md" = "cortex_score/LICENSE-THIRD-PARTY.md"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/cortex_score",
+  "tests",
+  "README.md",
+  "LICENSE",
+  "LICENSE-THIRD-PARTY.md",
+  "CITATION.cff",
+  "pyproject.toml",
+  "requirements",
+]
+
+# ---- Ruff -----------------------------------------------------------
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["src/cortex_score/_version.py"]
+
+[tool.ruff.lint]
+select = [
+  "E", "F", "W",   # pycodestyle / pyflakes
+  "I",              # isort
+  "B",              # flake8-bugbear
+  "UP",             # pyupgrade
+  "SIM",            # flake8-simplify
+  "RUF",            # ruff-specific
+  "N",              # pep8-naming
+  "ANN",            # flake8-annotations (lighter than mypy)
+]
+ignore = [
+  "ANN401",  # allow `Any` where Pydantic / numpy require it
+  "B008",    # FastAPI/typer-style default-arg-with-call pattern is fine
+]
+
+# ---- Mypy -----------------------------------------------------------
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+plugins = ["pydantic.mypy"]
+exclude = ["build/", "dist/", ".venv/"]
+
+[[tool.mypy.overrides]]
+# tribev2, whisperx, moviepy, cv2 are imported lazily inside function
+# bodies and may not be present in the dev environment. Don't fail the
+# mypy run on those.
+module = [
+  "tribev2.*",
+  "whisperx",
+  "whisperx.*",
+  "moviepy",
+  "moviepy.*",
+  "cv2",
+  "cv2.*",
+  "transformers",
+  "transformers.*",
+  "huggingface_hub",
+  "huggingface_hub.*",
+  "torch",
+  "torch.*",
+]
+ignore_missing_imports = true
+
+# ---- Pytest ---------------------------------------------------------
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+  "gpu: requires a CUDA GPU and TRIBE v2 install; skipped by default in CI",
+  "slow: marked test takes > 5 seconds",
+  "integration: end-to-end test crossing module boundaries",
+]
+filterwarnings = ["error", "ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+branch = true
+source = ["cortex_score"]
+omit = [
+  "src/cortex_score/_version.py",
+  "src/cortex_score/runners/tribev2.py",  # GPU-only; covered by @pytest.mark.gpu
+]
+
+[tool.coverage.report]
+exclude_also = [
+  "raise NotImplementedError",
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+]
+fail_under = 80

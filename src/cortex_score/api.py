@@ -1,0 +1,439 @@
+"""High-level API.
+
+Three entry points, ordered from strictest to friendliest:
+
+1. ``score_from_prediction_bundle(bundle)`` — type-safe, no kwargs.
+   Use when you already have a validated ``PredictionBundle``.
+2. ``score_from_predictions(preds, *, mesh, tr_seconds, ...)`` — the
+   common case for CPU-only users who have a NumPy prediction tensor
+   from somewhere else (their own TRIBE run, an .npy file). Forces
+   them to declare the scientific assumptions up front.
+3. ``score(video_path, *, runner=None)`` — full pipeline. Lazy-loads a
+   TRIBE v2 runner unless one is supplied.
+
+Plus ``CortexScorer`` — a small class for batch workflows that want to
+load a runner once and score many clips.
+"""
+
+from __future__ import annotations
+
+import datetime as _dt
+import hashlib
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+import numpy.typing as npt
+
+from cortex_score.atlas import (
+    load_manifest,
+    load_schaefer400,
+    load_schaefer400_to_yeo17,
+    load_yeo17,
+)
+from cortex_score.exceptions import MissingOptionalDependencyError
+from cortex_score.processing.aggregate import aggregate_to_rois
+from cortex_score.processing.networks import build_network_summary
+from cortex_score.processing.normalize import DEFAULT_EPS, zscore_within_atlas
+from cortex_score.processing.validate import (
+    coerce_float32,
+    validate_predictions_against_mesh,
+)
+from cortex_score.runners.base import PredictionRunner
+from cortex_score.schemas import (
+    AtlasMeta,
+    InputMeta,
+    NetworkScore,
+    NormalizationMeta,
+    NormalizationScope,
+    PredictionBundle,
+    ScoreResult,
+    ScoreWarning,
+    SegmentMeta,
+    TimingMeta,
+    build_provenance,
+    compute_result_id,
+    default_tribev2_license_restrictions,
+    utc_now,
+    _detect_torch_environment,
+)
+
+
+@dataclass(frozen=True)
+class ScoreConfig:
+    """Tweakable scoring knobs.
+
+    Stays small on purpose — anything that affects scientific output is
+    recorded into ``ScoreResult`` for provenance, and any new knob
+    requires bumping ``METRICS_VERSION`` or ``SCHEMA_VERSION``.
+
+    Attributes:
+        normalization_scope: how the z-score is computed. Default is
+            ``"within_video"`` (the only scientifically meaningful value
+            in v0.1).
+        epsilon: ridge for the z-score std denominator.
+        include_full_timeseries: when False, the per-network
+            ``energy_timeseries`` and ``mean_z_timeseries`` are still
+            emitted (the schema requires them) but the orchestrator can
+            be configured to populate them with their summary scalars
+            only. v0.1 always emits the full timeseries — this is a
+            placeholder for a future ``compact`` mode.
+        warnings: caller-supplied warnings to merge into ``ScoreResult.warnings``.
+    """
+
+    normalization_scope: NormalizationScope = "within_video"
+    reference_id: str | None = None
+    epsilon: float = DEFAULT_EPS
+    include_full_timeseries: bool = True
+    warnings: tuple[ScoreWarning, ...] = field(default_factory=tuple)
+
+
+def score_from_prediction_bundle(
+    bundle: PredictionBundle,
+    *,
+    config: ScoreConfig | None = None,
+    input_meta: InputMeta | None = None,
+) -> ScoreResult:
+    """Score a validated ``PredictionBundle``.
+
+    This is the type-safe entry point. The bundle already carries every
+    piece of metadata the scoring path needs (mesh, TR, HRF lag, model
+    id + revision); no kwargs are required.
+
+    Args:
+        bundle: the validated prediction bundle.
+        config: optional scoring configuration (default = within-video
+            z-score, full timeseries).
+        input_meta: optional ``InputMeta`` to embed in the result. If
+            None, an empty ``InputMeta`` is used (matches direct
+            "I have predictions, I don't have the source file" case).
+
+    Returns:
+        A ``ScoreResult`` ready to serialize to JSON.
+    """
+    config = config or ScoreConfig()
+    input_meta = input_meta or InputMeta()
+
+    schaefer = load_schaefer400()
+    yeo = load_yeo17()
+    manifest = load_manifest()
+
+    # Defensive: re-validate even though PredictionBundle's __post_init__
+    # already checked shape. This catches the case where a caller built
+    # a bundle with a mesh string that does not match the bundled atlas
+    # vertex count.
+    validate_predictions_against_mesh(
+        bundle.vertex_predictions,
+        mesh=bundle.mesh,
+        expected_n_vertices=schaefer.vertex_to_parcel.shape[0],
+    )
+
+    preds = coerce_float32(bundle.vertex_predictions)
+
+    # Schaefer-400 ROIs by mean over assigned vertices.
+    schaefer_preds = aggregate_to_rois(
+        preds,
+        schaefer.vertex_to_parcel,
+        schaefer.n_parcels,
+    )
+    # Yeo-17 networks the same way.
+    yeo_preds = aggregate_to_rois(
+        preds,
+        yeo.vertex_to_parcel,
+        yeo.n_parcels,
+    )
+
+    z_yeo = zscore_within_atlas(yeo_preds, eps=config.epsilon)
+
+    summaries = build_network_summary(z_yeo)
+
+    network_groups_sha = manifest.file_shas["network_groups.json"]
+    networks = tuple(
+        NetworkScore(
+            id=s["id"],
+            label=s["label"],
+            description=s["description"],
+            color=s["color"],
+            yeo_indices=tuple(s["yeo_indices"]),
+            yeo_labels=tuple(s["yeo_labels"]),
+            mean_energy=s["mean_energy"],
+            peak_energy=s["peak_energy"],
+            energy_timeseries=tuple(s["energy_timeseries"]),
+            mean_z_timeseries=tuple(s["mean_z_timeseries"]),
+            group_definition_sha256=network_groups_sha,
+        )
+        for s in summaries
+    )
+
+    timing = TimingMeta(
+        tr_seconds=bundle.tr_seconds,
+        hrf_lag_seconds=bundle.hrf_lag_seconds,
+        n_segments=bundle.n_segments,
+    )
+    normalization = NormalizationMeta(
+        scope=config.normalization_scope,
+        epsilon=config.epsilon,
+        reference_id=config.reference_id,
+    )
+    atlas = AtlasMeta(
+        mesh=bundle.mesh,
+        n_vertices=bundle.n_vertices,
+        atlas_version=manifest.atlas_version,
+        atlas_sha256=schaefer.sha256,
+        yeo_atlas_sha256=yeo.sha256,
+        network_groups_sha256=network_groups_sha,
+        network_group_source=manifest.network_group_source,
+    )
+
+    torch_version, cuda_available, device = _detect_torch_environment()
+    provenance = build_provenance(
+        model_id=bundle.model_id,
+        model_revision=bundle.model_revision,
+        runner=_runner_class_path(bundle.source),
+        torch_version=torch_version,
+        cuda_available=cuda_available,
+        device=device,
+    )
+
+    license_restrictions = default_tribev2_license_restrictions()
+
+    created_at = utc_now()
+    body: dict[str, Any] = {
+        "schema_version": "1.0",
+        "input": input_meta.model_dump(mode="json"),
+        "timing": timing.model_dump(mode="json"),
+        "normalization": normalization.model_dump(mode="json"),
+        "atlas": atlas.model_dump(mode="json"),
+        "provenance": provenance.model_dump(mode="json"),
+        "license_restrictions": [r.model_dump(mode="json") for r in license_restrictions],
+        "warnings": [w.model_dump(mode="json") for w in config.warnings],
+        "networks": [n.model_dump(mode="json") for n in networks],
+        "created_at": created_at.isoformat(),
+    }
+    result_id = compute_result_id(body)
+
+    return ScoreResult(
+        result_id=result_id,
+        created_at=created_at,
+        input=input_meta,
+        timing=timing,
+        normalization=normalization,
+        atlas=atlas,
+        provenance=provenance,
+        license_restrictions=license_restrictions,
+        warnings=config.warnings,
+        networks=networks,
+    )
+
+
+def score_from_predictions(
+    preds: npt.NDArray[np.floating],
+    *,
+    mesh: str = "fsaverage5",
+    tr_seconds: float = 1.0,
+    hrf_lag_seconds: float = 5.0,
+    model_id: str = "facebook/tribev2",
+    model_revision: str = "unknown",
+    source: str = "npy",
+    segments: tuple[SegmentMeta, ...] | None = None,
+    config: ScoreConfig | None = None,
+    input_meta: InputMeta | None = None,
+) -> ScoreResult:
+    """Friendly entry point for the CPU-only postprocessing tier.
+
+    Forces the caller to acknowledge the scientific assumptions
+    (mesh, TR, HRF lag, model identity) even when only a bare NumPy
+    tensor is on hand. Construct a ``PredictionBundle`` internally and
+    delegate to ``score_from_prediction_bundle``.
+
+    Args:
+        preds: shape ``(T, V)``, float-compatible. Cast to float32.
+        mesh: cortical mesh the predictions live on (default
+            ``"fsaverage5"``).
+        tr_seconds: TRIBE's effective TR (seconds per segment row).
+        hrf_lag_seconds: TRIBE's HRF lag in seconds.
+        model_id: HuggingFace-style model id. Default is the TRIBE v2
+            id; override if the predictions came from a different model.
+        model_revision: model revision / commit / version tag.
+            ``"unknown"`` is allowed but discouraged.
+        source: one of ``"tribev2"``, ``"npy"``, ``"remote"``, ``"unknown"``.
+        segments: optional TRIBE segment time bounds.
+        config: optional ``ScoreConfig``.
+        input_meta: optional ``InputMeta``.
+
+    Returns:
+        A ``ScoreResult``.
+    """
+    if mesh != "fsaverage5":
+        msg = (
+            f"mesh='{mesh}' is not supported in v0.1; only 'fsaverage5' is "
+            f"shipped. Future versions will gate this via an explicit Mesh enum."
+        )
+        raise ValueError(msg)
+
+    preds_f32 = coerce_float32(preds)
+    bundle = PredictionBundle(
+        vertex_predictions=preds_f32,
+        mesh="fsaverage5",
+        n_vertices=int(preds_f32.shape[1]),
+        tr_seconds=tr_seconds,
+        hrf_lag_seconds=hrf_lag_seconds,
+        model_id=model_id,
+        model_revision=model_revision,
+        source=source,  # type: ignore[arg-type]
+        segments=segments or (),
+    )
+    return score_from_prediction_bundle(bundle, config=config, input_meta=input_meta)
+
+
+def score(
+    video_path: str | Path,
+    *,
+    runner: PredictionRunner | None = None,
+    config: ScoreConfig | None = None,
+) -> ScoreResult:
+    """Full pipeline: video file -> ScoreResult.
+
+    Requires a ``PredictionRunner``. If none is supplied, the default
+    TRIBE v2 runner is loaded lazily; this will raise
+    ``MissingOptionalDependencyError`` if the ``[gpu-deps]`` extra and
+    TRIBE v2 itself have not been installed.
+
+    Args:
+        video_path: path to an .mp4 (or any container ffmpeg understands).
+        runner: optional ``PredictionRunner`` instance. Construct one
+            explicitly to control device, cache dir, or model revision.
+        config: optional ``ScoreConfig``.
+
+    Returns:
+        A ``ScoreResult``.
+
+    Raises:
+        FileNotFoundError: if ``video_path`` does not exist.
+        MissingOptionalDependencyError: if no runner is supplied and
+            TRIBE v2 cannot be imported.
+    """
+    path = Path(video_path)
+    if not path.exists():
+        msg = f"video file not found: {path}"
+        raise FileNotFoundError(msg)
+
+    if runner is None:
+        runner = _load_default_runner()
+
+    bundle = runner.predict_video(path)
+    input_meta = _build_input_meta(path)
+    return score_from_prediction_bundle(bundle, config=config, input_meta=input_meta)
+
+
+# ---------------------------------------------------------------------
+# CortexScorer (class form for batch reuse)
+# ---------------------------------------------------------------------
+
+
+class CortexScorer:
+    """Load a runner once, score many clips.
+
+    The bare ``score()`` function lazy-loads a default TRIBE v2 runner
+    on every call, which is correct for one-shot use but wasteful when
+    scoring a batch (TRIBE weights are 12 GB and take ~30 s of cold
+    start). Construct a ``CortexScorer`` once and reuse it::
+
+        scorer = CortexScorer()
+        for clip in clips:
+            scorer.score(clip).save(out_dir / f"{clip.stem}.json")
+    """
+
+    def __init__(
+        self,
+        runner: PredictionRunner | None = None,
+        *,
+        config: ScoreConfig | None = None,
+    ) -> None:
+        self._runner = runner
+        self._config = config or ScoreConfig()
+
+    @property
+    def runner(self) -> PredictionRunner:
+        """Return the resident runner, constructing the default lazily."""
+        if self._runner is None:
+            self._runner = _load_default_runner()
+        return self._runner
+
+    def score(self, video_path: str | Path) -> ScoreResult:
+        return score(video_path, runner=self.runner, config=self._config)
+
+
+# ---------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------
+
+
+def _load_default_runner() -> PredictionRunner:
+    """Lazy import of the TRIBE v2 runner.
+
+    Kept here (not at module top) so ``import cortex_score`` never pays
+    the torch import cost.
+    """
+    try:
+        from cortex_score.runners.tribev2 import TribeV2Runner
+    except MissingOptionalDependencyError:
+        raise
+    except ImportError as exc:
+        raise MissingOptionalDependencyError(
+            package="tribev2",
+            install_hint=(
+                "pip install 'cortex-score[gpu-deps]'\n"
+                "    pip install -r requirements/tribev2-gpu.txt"
+            ),
+        ) from exc
+    return TribeV2Runner()
+
+
+def _runner_class_path(source: str) -> str:
+    """Map PredictionBundle.source to a runner class path string."""
+    if source == "tribev2":
+        return "cortex_score.runners.tribev2.TribeV2Runner"
+    return "external"
+
+
+def _build_input_meta(path: Path) -> InputMeta:
+    """Build an ``InputMeta`` for a real file on disk.
+
+    Computes SHA-256 chunked so a 100 MB clip doesn't blow memory.
+    Other fields (duration, fps, resolution) are filled in when we
+    have ffprobe access — left None here to keep this helper
+    side-effect-free.
+    """
+    sha = _sha256_file(path)
+    return InputMeta(
+        path=str(path.resolve()),
+        content_sha256=sha,
+    )
+
+
+def _sha256_file(path: Path, *, chunk_size: int = 1 << 20) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        while True:
+            chunk = fh.read(chunk_size)
+            if not chunk:
+                break
+            h.update(chunk)
+    return h.hexdigest()
+
+
+# Re-exports for cortex_score.__init__.py convenience.
+__all__ = [
+    "score",
+    "score_from_predictions",
+    "score_from_prediction_bundle",
+    "CortexScorer",
+    "ScoreConfig",
+]
+
+
+# Silence unused-import warnings for re-exports that are imported only
+# by cortex_score.__init__ via this module's namespace.
+_ = _dt

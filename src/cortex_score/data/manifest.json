@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "atlas_version": "schaefer2018-400-yeo17-fsaverage5",
+  "mesh": "fsaverage5",
+  "n_vertices": 20484,
+  "source_note": "Schaefer 2018 (MIT) 400-parcel x Yeo 2011 (FreeSurfer/BSD-like) 17-network projection on fsaverage5, copied verbatim from Cortexia (D:\\cortexia\\assets\\atlases).",
+  "files": [
+    {
+      "name": "schaefer400_vertex.npy",
+      "purpose": "vertex_to_parcel array (int64, shape (20484,)) for Schaefer-400; -1 = medial wall",
+      "sha256": "f7938a4a6a6317d1f07e5bea0b16ce4dc33b77143e6e8d6a1e22062b00dac8cf",
+      "size_bytes": 164000
+    },
+    {
+      "name": "yeo17_vertex.npy",
+      "purpose": "vertex_to_parcel array (int64, shape (20484,)) for Yeo-17; -1 = medial wall",
+      "sha256": "c7dde17b707abc93c034eff71207a85aaaaf99a4b5e16f0f0c2ac5ba4c6f0d31",
+      "size_bytes": 164000
+    },
+    {
+      "name": "schaefer400_to_yeo17.npy",
+      "purpose": "Schaefer-400 parcel id -> Yeo-17 network id mapping (int64, shape (400,))",
+      "sha256": "a9632e83140e357e9249f5c9d9b170d0e9c80495d12a04851b06e3bb45d700e5",
+      "size_bytes": 3328
+    },
+    {
+      "name": "labels_schaefer400.json",
+      "purpose": "human-readable parcel labels for Schaefer-400 (list of 400 strings)",
+      "sha256": "63bffa4e18037b30280d02523b4442afb2c56b00cafc02c63a707c435b17af72",
+      "size_bytes": 14282
+    },
+    {
+      "name": "labels_yeo17.json",
+      "purpose": "human-readable network labels for Yeo-17 (list of 17 strings)",
+      "sha256": "7832c882cc579dacffadbec19ab80c6a053b27c39b381fd22fee430983133c4f",
+      "size_bytes": 252
+    },
+    {
+      "name": "network_groups.json",
+      "purpose": "5-network rollup (visual/language/faces/attention/motion) with Yeo-17 index/label mappings; source = cortexia-network-groups-v1",
+      "sha256": "36faa271e9b4d8c9d8e17671c19cb31746c27ff8fa1a000b679405f76fd485bf",
+      "size_bytes": 1790
+    }
+  ],
+  "network_group_source": "cortexia-network-groups-v1"
+}

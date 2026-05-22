@@ -1,0 +1,14 @@
+# TRIBE v2 install (kept OUT of pyproject.toml because PyPI rejects
+# package metadata containing direct-URL / git-based requirements).
+#
+# Usage:
+#
+#     pip install "cortex-score[gpu-deps]"
+#     pip install -r requirements/tribev2-gpu.txt
+#
+# Pinned to the commit reviewed on 2026-05-22. Bumping the SHA below
+# also requires bumping the `tribev2_pinned_revision` value in
+# cortex_score/runners/tribev2.py so the provenance written into
+# ScoreResult stays accurate.
+
+tribev2 @ git+https://github.com/facebookresearch/tribev2.git@34f52344e5ba96660fac877393e1954e399d3ef3

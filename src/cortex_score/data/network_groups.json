@@ -1,0 +1,68 @@
+{
+  "yeoLabels": [
+    "VisCent",
+    "VisPeri",
+    "SomMotA",
+    "SomMotB",
+    "DorsAttnA",
+    "DorsAttnB",
+    "SalVentAttnA",
+    "SalVentAttnB",
+    "LimbicB",
+    "LimbicA",
+    "ContA",
+    "ContB",
+    "ContC",
+    "DefaultA",
+    "DefaultB",
+    "DefaultC",
+    "TempPar"
+  ],
+  "groups": [
+    {
+      "id": "visual",
+      "label": "Visual cortex",
+      "description": "Visual response features: color, shape, contrast, and on-screen motion.",
+      "color": "#5BC0EB",
+      "colorRgb": [0.357, 0.753, 0.922],
+      "yeoIndices": [0, 1],
+      "yeoLabels": ["VisCent", "VisPeri"]
+    },
+    {
+      "id": "language",
+      "label": "Language",
+      "description": "Speech, text, and semantic-context response features.",
+      "color": "#FFB627",
+      "colorRgb": [1.0, 0.714, 0.153],
+      "yeoIndices": [11, 16],
+      "yeoLabels": ["ContB", "TempPar"]
+    },
+    {
+      "id": "faces",
+      "label": "Faces and social",
+      "description": "Social-context response features used as an exploratory face-related summary.",
+      "color": "#E55D87",
+      "colorRgb": [0.898, 0.365, 0.529],
+      "yeoIndices": [7, 15],
+      "yeoLabels": ["SalVentAttnB", "DefaultC"]
+    },
+    {
+      "id": "attention",
+      "label": "Attention",
+      "description": "Dorsal and ventral attention/control response features.",
+      "color": "#9BC53D",
+      "colorRgb": [0.608, 0.773, 0.239],
+      "yeoIndices": [4, 5, 6, 10],
+      "yeoLabels": ["DorsAttnA", "DorsAttnB", "SalVentAttnA", "ContA"]
+    },
+    {
+      "id": "motion",
+      "label": "Motion",
+      "description": "Somatomotor and action-related response features.",
+      "color": "#7E5BEF",
+      "colorRgb": [0.494, 0.357, 0.937],
+      "yeoIndices": [2, 3],
+      "yeoLabels": ["SomMotA", "SomMotB"]
+    }
+  ]
+}

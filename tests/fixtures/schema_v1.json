@@ -1,0 +1,543 @@
+{
+  "$defs": {
+    "AtlasMeta": {
+      "additionalProperties": false,
+      "description": "Atlas provenance \u2014 pins the bundled data this score was computed against.",
+      "properties": {
+        "atlas_sha256": {
+          "description": "SHA-256 of the Schaefer-400 vertex .npy used.",
+          "maxLength": 64,
+          "minLength": 64,
+          "title": "Atlas Sha256",
+          "type": "string"
+        },
+        "atlas_version": {
+          "description": "Bundled atlas identifier (e.g. 'schaefer2018-400-yeo17-fsaverage5').",
+          "title": "Atlas Version",
+          "type": "string"
+        },
+        "mesh": {
+          "const": "fsaverage5",
+          "title": "Mesh",
+          "type": "string"
+        },
+        "n_vertices": {
+          "minimum": 1,
+          "title": "N Vertices",
+          "type": "integer"
+        },
+        "network_group_source": {
+          "description": "Group definition source id (e.g. 'cortexia-network-groups-v1').",
+          "title": "Network Group Source",
+          "type": "string"
+        },
+        "network_groups_sha256": {
+          "description": "SHA-256 of network_groups.json used.",
+          "maxLength": 64,
+          "minLength": 64,
+          "title": "Network Groups Sha256",
+          "type": "string"
+        },
+        "yeo_atlas_sha256": {
+          "description": "SHA-256 of the Yeo-17 vertex .npy used.",
+          "maxLength": 64,
+          "minLength": 64,
+          "title": "Yeo Atlas Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mesh",
+        "n_vertices",
+        "atlas_version",
+        "atlas_sha256",
+        "yeo_atlas_sha256",
+        "network_groups_sha256",
+        "network_group_source"
+      ],
+      "title": "AtlasMeta",
+      "type": "object"
+    },
+    "InputMeta": {
+      "additionalProperties": false,
+      "description": "Where the prediction came from on disk / wire.",
+      "properties": {
+        "content_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SHA-256 of the input bytes, if a file was provided.",
+          "title": "Content Sha256"
+        },
+        "duration_s": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Video duration in seconds.",
+          "title": "Duration S"
+        },
+        "fps": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Frames per second.",
+          "title": "Fps"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Absolute path of the input video, if known. None when the caller passed predictions directly (e.g. via score_from_predictions).",
+          "title": "Path"
+        },
+        "resolution": {
+          "anyOf": [
+            {
+              "pattern": "^\\d+x\\d+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Resolution as 'WxH' (e.g. '720x1280').",
+          "title": "Resolution"
+        }
+      },
+      "title": "InputMeta",
+      "type": "object"
+    },
+    "LicenseRestriction": {
+      "additionalProperties": false,
+      "description": "A non-MIT restriction that applies to the result.",
+      "properties": {
+        "component": {
+          "title": "Component",
+          "type": "string"
+        },
+        "license": {
+          "title": "License",
+          "type": "string"
+        },
+        "note": {
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "component",
+        "license",
+        "note"
+      ],
+      "title": "LicenseRestriction",
+      "type": "object"
+    },
+    "NetworkScore": {
+      "additionalProperties": false,
+      "description": "One of the five 5-network rollup entries.",
+      "properties": {
+        "color": {
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "title": "Color",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "energy_timeseries": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Energy Timeseries",
+          "type": "array"
+        },
+        "group_definition_sha256": {
+          "description": "SHA-256 of the network_groups.json that defined this group.",
+          "maxLength": 64,
+          "minLength": 64,
+          "title": "Group Definition Sha256",
+          "type": "string"
+        },
+        "id": {
+          "enum": [
+            "visual",
+            "language",
+            "faces",
+            "attention",
+            "motion"
+          ],
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "mean_energy": {
+          "minimum": 0,
+          "title": "Mean Energy",
+          "type": "number"
+        },
+        "mean_z_timeseries": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Mean Z Timeseries",
+          "type": "array"
+        },
+        "peak_energy": {
+          "minimum": 0,
+          "title": "Peak Energy",
+          "type": "number"
+        },
+        "yeo_indices": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Yeo Indices",
+          "type": "array"
+        },
+        "yeo_labels": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Yeo Labels",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "description",
+        "color",
+        "yeo_indices",
+        "yeo_labels",
+        "mean_energy",
+        "peak_energy",
+        "energy_timeseries",
+        "mean_z_timeseries",
+        "group_definition_sha256"
+      ],
+      "title": "NetworkScore",
+      "type": "object"
+    },
+    "NormalizationMeta": {
+      "additionalProperties": false,
+      "description": "How the per-network z-scores were computed.",
+      "properties": {
+        "epsilon": {
+          "description": "Ridge added to the std denominator to avoid division by zero.",
+          "exclusiveMinimum": 0,
+          "title": "Epsilon",
+          "type": "number"
+        },
+        "method": {
+          "const": "zscore",
+          "default": "zscore",
+          "title": "Method",
+          "type": "string"
+        },
+        "reference_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Identifier of the cross-clip reference distribution used when scope='reference_distribution'. None for within-video.",
+          "title": "Reference Id"
+        },
+        "scope": {
+          "default": "within_video",
+          "enum": [
+            "within_video",
+            "reference_distribution"
+          ],
+          "title": "Scope",
+          "type": "string"
+        }
+      },
+      "required": [
+        "epsilon"
+      ],
+      "title": "NormalizationMeta",
+      "type": "object"
+    },
+    "ProvenanceMeta": {
+      "additionalProperties": false,
+      "description": "Software-side provenance.\n\nThese fields are enough to reproduce a score offline given the same\ninput bytes.",
+      "properties": {
+        "cortex_score_version": {
+          "title": "Cortex Score Version",
+          "type": "string"
+        },
+        "cuda_available": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cuda Available"
+        },
+        "device": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Device"
+        },
+        "metrics_version": {
+          "default": "1.0",
+          "title": "Metrics Version",
+          "type": "string"
+        },
+        "model_id": {
+          "title": "Model Id",
+          "type": "string"
+        },
+        "model_revision": {
+          "title": "Model Revision",
+          "type": "string"
+        },
+        "python_version": {
+          "title": "Python Version",
+          "type": "string"
+        },
+        "runner": {
+          "description": "Fully qualified class name of the runner that produced the predictions (e.g. 'cortex_score.runners.tribev2.TribeV2Runner') or 'external' when score_from_predictions was used directly.",
+          "title": "Runner",
+          "type": "string"
+        },
+        "schema_version": {
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "serialization_version": {
+          "default": "1.0",
+          "title": "Serialization Version",
+          "type": "string"
+        },
+        "torch_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Torch Version"
+        },
+        "tribev2_package_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tribev2 Package Version"
+        }
+      },
+      "required": [
+        "cortex_score_version",
+        "model_id",
+        "model_revision",
+        "runner",
+        "python_version"
+      ],
+      "title": "ProvenanceMeta",
+      "type": "object"
+    },
+    "ScoreWarning": {
+      "additionalProperties": false,
+      "description": "One warning emitted during scoring (preprocessing, validation, etc.).",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "severity": {
+          "default": "warning",
+          "enum": [
+            "info",
+            "warning",
+            "error"
+          ],
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "ScoreWarning",
+      "type": "object"
+    },
+    "TimingMeta": {
+      "additionalProperties": false,
+      "description": "TRIBE-side timing constants used for this prediction.",
+      "properties": {
+        "hrf_lag_seconds": {
+          "description": "HRF lag in seconds.",
+          "minimum": 0,
+          "title": "Hrf Lag Seconds",
+          "type": "number"
+        },
+        "n_segments": {
+          "description": "Number of prediction segments.",
+          "minimum": 1,
+          "title": "N Segments",
+          "type": "integer"
+        },
+        "tr_seconds": {
+          "description": "Effective TR (seconds per segment).",
+          "exclusiveMinimum": 0,
+          "title": "Tr Seconds",
+          "type": "number"
+        }
+      },
+      "required": [
+        "tr_seconds",
+        "hrf_lag_seconds",
+        "n_segments"
+      ],
+      "title": "TimingMeta",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Top-level result \u2014 the JSON contract of cortex-score.\n\nFields are intentionally verbose: this artifact may be archived,\naudited, cited, or fed into another model years from now, so being\nself-describing matters more than being terse.",
+  "properties": {
+    "atlas": {
+      "$ref": "#/$defs/AtlasMeta"
+    },
+    "created_at": {
+      "description": "UTC ISO-8601 timestamp at which the score was computed.",
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "framing": {
+      "default": "Score any video for predicted cortical engagement across 5 brain networks (visual, language, faces, attention, motion). Built on Meta FAIR's TRIBE v2.",
+      "title": "Framing",
+      "type": "string"
+    },
+    "framing_disclaimer": {
+      "default": "cortex-score does not measure real viewer engagement. It summarizes predicted fMRI-like responses from a pretrained brain-encoding model for an average subject.",
+      "title": "Framing Disclaimer",
+      "type": "string"
+    },
+    "framing_scientific": {
+      "default": "cortex-score summarizes TRIBE v2 predicted cortical responses for any video across five Cortexia-defined network groups.",
+      "title": "Framing Scientific",
+      "type": "string"
+    },
+    "input": {
+      "$ref": "#/$defs/InputMeta"
+    },
+    "license_restrictions": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/LicenseRestriction"
+      },
+      "title": "License Restrictions",
+      "type": "array"
+    },
+    "networks": {
+      "items": {
+        "$ref": "#/$defs/NetworkScore"
+      },
+      "title": "Networks",
+      "type": "array"
+    },
+    "normalization": {
+      "$ref": "#/$defs/NormalizationMeta"
+    },
+    "provenance": {
+      "$ref": "#/$defs/ProvenanceMeta"
+    },
+    "result_id": {
+      "description": "SHA-256 of the canonical JSON of this result with result_id itself set to the empty string. Stable hash for audit logs.",
+      "title": "Result Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "timing": {
+      "$ref": "#/$defs/TimingMeta"
+    },
+    "warnings": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ScoreWarning"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "result_id",
+    "created_at",
+    "input",
+    "timing",
+    "normalization",
+    "atlas",
+    "provenance",
+    "networks"
+  ],
+  "title": "ScoreResult",
+  "type": "object"
+}
