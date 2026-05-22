@@ -21,7 +21,7 @@ import json
 from dataclasses import dataclass
 from functools import lru_cache
 from importlib.resources import files
-from typing import Any, cast
+from typing import Any
 
 import numpy as np
 import numpy.typing as npt
@@ -68,11 +68,11 @@ class AtlasManifest:
 
 
 def _read_bytes(filename: str) -> bytes:
-    return cast(bytes, files(_DATA_PKG).joinpath(filename).read_bytes())
+    return files(_DATA_PKG).joinpath(filename).read_bytes()
 
 
 def _read_text(filename: str) -> str:
-    return cast(str, files(_DATA_PKG).joinpath(filename).read_text(encoding="utf-8"))
+    return files(_DATA_PKG).joinpath(filename).read_text(encoding="utf-8")
 
 
 def _load_npy(filename: str) -> tuple[np.ndarray, str]:
@@ -133,8 +133,24 @@ def load_manifest() -> AtlasManifest:
 
 
 def _assert_sha_matches(manifest: AtlasManifest, filename: str, observed: str) -> None:
+    """Strict SHA-256 check against the manifest.
+
+    Raises ``AtlasMismatchError`` if the filename is absent from the
+    manifest (would have meant a silent bypass in the original
+    implementation) OR if the observed SHA does not match the expected
+    one. The manifest is generated from the bundled wheel's data
+    directory at build time, so every file the loader touches must
+    appear in it; a missing entry is a corruption signal.
+    """
     expected = manifest.file_shas.get(filename)
-    if expected and expected != observed:
+    if expected is None:
+        msg = (
+            f"'{filename}' is not present in data/manifest.json — the wheel "
+            "appears corrupted or the manifest is out of date with the "
+            "bundled atlas data."
+        )
+        raise AtlasMismatchError(msg)
+    if expected != observed:
         msg = (
             f"SHA-256 of bundled '{filename}' ({observed}) does not match "
             f"manifest.json ({expected}). The wheel may be corrupted."

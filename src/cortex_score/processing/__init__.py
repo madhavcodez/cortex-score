@@ -22,16 +22,16 @@ from cortex_score.processing.validate import (
 )
 
 __all__ = [
-    "aggregate_to_rois",
-    "remap_atlas",
-    "zscore_within_atlas",
-    "compute_roi_metrics",
-    "ROIMetrics",
-    "build_network_summary",
     "NETWORK_GROUPS",
     "NETWORK_IDS",
     "NetworkGroup",
     "NetworkId",
-    "yeo_to_network_indices",
+    "ROIMetrics",
+    "aggregate_to_rois",
+    "build_network_summary",
+    "compute_roi_metrics",
+    "remap_atlas",
     "validate_predictions_against_mesh",
+    "yeo_to_network_indices",
+    "zscore_within_atlas",
 ]

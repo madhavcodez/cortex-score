@@ -46,9 +46,11 @@ def test_metrics_shape_validation() -> None:
 
 
 def test_metrics_returns_frozen_roimetrics() -> None:
+    import dataclasses
+
     z = np.zeros((5, 1), dtype=np.float32)
     metrics = compute_roi_metrics(z)
-    with pytest.raises(Exception):
+    with pytest.raises(dataclasses.FrozenInstanceError):
         metrics[0].mean_energy = 99.0  # type: ignore[misc]
 
 

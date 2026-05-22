@@ -10,22 +10,21 @@ Two top-level directories under the cache root:
             <key>.json                (ScoreResult JSON)
         cache_manifest.json           (running index of all keys + their inputs)
 
-Writes are atomic: contents go to ``{path}.tmp.{pid}.{rand}``, then
+Writes are atomic: contents go to ``{path}.tmp.{pid}.{uuid_hex}``, then
 ``os.replace`` to the final name. ``os.replace`` is atomic on all
 modern filesystems (POSIX and NTFS) per Python's stdlib documentation.
-
-Concurrent batch safety: each top-level directory keeps an advisory
-``.lock`` file. We use a simple "best effort" mtime-poll lock; this is
-not a hard guarantee but is enough to prevent the common case of two
-``cortex-score`` processes started by the same shell stepping on each
-other while a single user batches a folder.
+The tmp suffix uses ``uuid.uuid4().hex`` (128 random bits) so two
+writers in the same millisecond - or with the same PID after a fork -
+never collide on the temp filename.
 """
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import time
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -98,13 +97,23 @@ class CacheStore:
 
     def clear(self, *, predictions: bool = True, scores: bool = True) -> None:
         """Remove cache contents (does not delete the root directory)."""
-        if predictions and self.predictions_dir.exists():
-            for p in self.predictions_dir.iterdir():
+
+        def _purge(dirpath: Path) -> None:
+            if not dirpath.exists():
+                return
+            for p in dirpath.iterdir():
                 if p.is_file():
                     p.unlink()
-        if scores and self.scores_dir.exists():
-            for p in self.scores_dir.iterdir():
-                if p.is_file():
+
+        if predictions:
+            _purge(self.predictions_dir)
+        if scores:
+            _purge(self.scores_dir)
+        # Sweep tmp orphans left by interrupted atomic writes (interrupted
+        # process or SIGKILL between tmp write and os.replace).
+        if self.root.exists():
+            for p in self.root.glob("**/*.tmp.*"):
+                with contextlib.suppress(OSError):
                     p.unlink()
         manifest = self._read_manifest()
         if predictions:
@@ -202,7 +211,8 @@ class CacheStore:
         if not self.manifest_path.exists():
             return {"version": "1.0", "predictions": {}, "scores": {}}
         try:
-            return json.loads(self.manifest_path.read_text(encoding="utf-8"))
+            parsed: dict[str, Any] = json.loads(self.manifest_path.read_text(encoding="utf-8"))
+            return parsed
         except json.JSONDecodeError:
             # Corrupted manifest — start fresh; cached files are still
             # on disk but become orphaned. Better than a fatal crash
@@ -222,12 +232,12 @@ class CacheStore:
 
     def _atomic_write_text(self, path: Path, payload: str) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_suffix(path.suffix + f".tmp.{os.getpid()}.{int(time.time() * 1000) & 0xFFFFFF}")
+        tmp = path.with_suffix(path.suffix + f".tmp.{os.getpid()}.{uuid.uuid4().hex}")
         tmp.write_text(payload, encoding="utf-8")
         os.replace(tmp, path)
 
     def _atomic_write_bytes(self, path: Path, payload: bytes) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_suffix(path.suffix + f".tmp.{os.getpid()}.{int(time.time() * 1000) & 0xFFFFFF}")
+        tmp = path.with_suffix(path.suffix + f".tmp.{os.getpid()}.{uuid.uuid4().hex}")
         tmp.write_bytes(payload)
         os.replace(tmp, path)

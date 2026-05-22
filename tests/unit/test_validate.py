@@ -14,17 +14,13 @@ from cortex_score.processing.validate import (
 
 def test_validate_accepts_correct_shape() -> None:
     preds = np.zeros((10, 20484), dtype=np.float32)
-    validate_predictions_against_mesh(
-        preds, mesh="fsaverage5", expected_n_vertices=20484
-    )
+    validate_predictions_against_mesh(preds, mesh="fsaverage5", expected_n_vertices=20484)
 
 
 def test_validate_raises_on_wrong_vertex_count() -> None:
     preds = np.zeros((10, 99), dtype=np.float32)
     with pytest.raises(IncompatiblePredictionShapeError) as info:
-        validate_predictions_against_mesh(
-            preds, mesh="fsaverage5", expected_n_vertices=20484
-        )
+        validate_predictions_against_mesh(preds, mesh="fsaverage5", expected_n_vertices=20484)
     assert info.value.expected_n_vertices == 20484
     assert info.value.actual_n_vertices == 99
     assert info.value.mesh == "fsaverage5"
@@ -42,9 +38,7 @@ def test_validate_raises_on_1d_input() -> None:
 def test_validate_raises_on_zero_timesteps() -> None:
     preds = np.zeros((0, 20484), dtype=np.float32)
     with pytest.raises(ValueError, match="at least 1 timestep"):
-        validate_predictions_against_mesh(
-            preds, mesh="fsaverage5", expected_n_vertices=20484
-        )
+        validate_predictions_against_mesh(preds, mesh="fsaverage5", expected_n_vertices=20484)
 
 
 def test_coerce_float32_passes_through_float32() -> None:

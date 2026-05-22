@@ -84,10 +84,13 @@ def test_prediction_key_changes_on_each_field(field: str) -> None:
 def test_score_key_changes_on_each_field(field: str) -> None:
     pred = prediction_cache_key(_base_prediction_inputs())
     base = _base_score_inputs(pred)
+    # Sentinel for mutation. Use a value guaranteed not to match ANY
+    # base field (none of the base shas use "0").
+    mutation_value: str | int = "0" * 64 if "sha256" in field else "mutated"
     if field == "prediction_key":
         mutated = dataclasses.replace(base, prediction_key="x" * 64)
     else:
-        mutated = dataclasses.replace(base, **{field: "9" * 64 if "sha256" in field else "mutated"})
+        mutated = dataclasses.replace(base, **{field: mutation_value})
     assert score_cache_key(base) != score_cache_key(mutated)
 
 

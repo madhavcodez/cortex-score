@@ -118,14 +118,15 @@ def test_score_from_prediction_bundle_with_input_meta() -> None:
         model_revision="bundled",
     )
     meta = InputMeta(
-        path="/fake/clip.mp4",
+        filename="clip.mp4",
         content_sha256="d" * 64,
         duration_s=12.4,
         fps=30.0,
         resolution="720x1280",
     )
     result = score_from_prediction_bundle(bundle, input_meta=meta)
-    assert result.input.path == "/fake/clip.mp4"
+    assert result.input.filename == "clip.mp4"
+    assert result.input.absolute_path is None  # opt-in only
     assert result.input.duration_s == 12.4
 
 

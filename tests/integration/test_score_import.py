@@ -18,7 +18,8 @@ def test_import_does_not_pull_in_torch() -> None:
     if "torch" in sys.modules:
         # We can't unload torch without segfaulting; just confirm
         # import works.
-        import cortex_score  # noqa: F401
+        import cortex_score
+
         return
 
     import cortex_score  # noqa: F401

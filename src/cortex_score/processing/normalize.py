@@ -52,4 +52,5 @@ def zscore_within_atlas(
     mean = in_64.mean(axis=0, keepdims=True)
     std = in_64.std(axis=0, keepdims=True)
     out = (in_64 - mean) / (std + eps)
-    return out.astype(np.float32)
+    result: npt.NDArray[np.float32] = out.astype(np.float32)
+    return result

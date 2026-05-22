@@ -30,6 +30,16 @@ GPU. See README for the install matrix.
 from __future__ import annotations
 
 from cortex_score._version import __version__
+
+# High-level API. score_from_predictions / score_from_prediction_bundle
+# stay CPU-only; score() lazily resolves a runner.
+from cortex_score.api import (
+    CortexScorer,
+    ScoreConfig,
+    score,
+    score_from_prediction_bundle,
+    score_from_predictions,
+)
 from cortex_score.exceptions import (
     AtlasMismatchError,
     CortexScoreError,
@@ -54,16 +64,11 @@ from cortex_score.schemas import (
     TimingMeta,
 )
 
-# High-level API. score_from_predictions / score_from_prediction_bundle
-# stay CPU-only; score() lazily resolves a runner.
-from cortex_score.api import (
-    CortexScorer,
-    score,
-    score_from_prediction_bundle,
-    score_from_predictions,
-)
-
-__all__ = [
+# Semantic grouping (Version > API > Schemas > Exceptions) is more
+# readable in docs than alphabetical, so the RUF022 sort hint is
+# silenced. Keep the groups stable; changes here ripple into __init__'s
+# public surface.
+__all__ = [  # noqa: RUF022
     # Version
     "__version__",
     # Top-level API
@@ -71,6 +76,7 @@ __all__ = [
     "score_from_predictions",
     "score_from_prediction_bundle",
     "CortexScorer",
+    "ScoreConfig",
     # Schemas
     "PredictionBundle",
     "ScoreResult",

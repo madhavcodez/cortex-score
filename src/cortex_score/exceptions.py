@@ -38,10 +38,7 @@ class MissingExternalToolError(CortexScoreError):
     """Raised when a required external binary (ffmpeg, uv) is not on PATH."""
 
     def __init__(self, tool: str, install_hint: str) -> None:
-        msg = (
-            f"External tool '{tool}' was not found on PATH.\n"
-            f"Install: {install_hint}\n"
-        )
+        msg = f"External tool '{tool}' was not found on PATH.\nInstall: {install_hint}\n"
         super().__init__(msg)
         self.tool = tool
         self.install_hint = install_hint

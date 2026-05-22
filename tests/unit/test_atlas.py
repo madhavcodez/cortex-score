@@ -22,9 +22,7 @@ from cortex_score.exceptions import AtlasMismatchError
 
 
 def _file_sha(filename: str) -> str:
-    return hashlib.sha256(
-        files("cortex_score.data").joinpath(filename).read_bytes()
-    ).hexdigest()
+    return hashlib.sha256(files("cortex_score.data").joinpath(filename).read_bytes()).hexdigest()
 
 
 def test_manifest_parses() -> None:
@@ -69,9 +67,13 @@ def test_load_manifest_is_cached() -> None:
     assert load_manifest() is load_manifest()
 
 
-def test_atlas_mismatch_error_is_raised_on_corruption(monkeypatch) -> None:
+def test_atlas_mismatch_error_is_raised_on_corruption(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Manually invalidate the SHA cache and confirm a tampered manifest
     surfaces ``AtlasMismatchError``."""
+    from typing import NoReturn
+
     from cortex_score import atlas as atlas_mod
 
     atlas_mod.load_schaefer400.cache_clear()  # type: ignore[attr-defined]
@@ -79,7 +81,11 @@ def test_atlas_mismatch_error_is_raised_on_corruption(monkeypatch) -> None:
 
     original = atlas_mod._assert_sha_matches
 
-    def fake_assert(manifest, filename, observed):  # noqa: ARG001
+    def fake_assert(
+        manifest: atlas_mod.AtlasManifest,
+        filename: str,
+        observed: str,
+    ) -> NoReturn:
         raise AtlasMismatchError("simulated corruption")
 
     monkeypatch.setattr(atlas_mod, "_assert_sha_matches", fake_assert)

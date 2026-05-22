@@ -60,8 +60,21 @@
     },
     "InputMeta": {
       "additionalProperties": false,
-      "description": "Where the prediction came from on disk / wire.",
+      "description": "Where the prediction came from on disk / wire.\n\n``filename`` is always safe to share \u2014 it's just the basename of the\ninput video. ``absolute_path`` is opt-in: by default it is None, so\nshared ScoreResult JSON does not leak the user's filesystem layout\nor home-directory username. To populate it, pass\n``ScoreConfig(include_absolute_path=True)`` or construct the\n``InputMeta`` explicitly.",
       "properties": {
+        "absolute_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Absolute filesystem path of the input video. Opt-in via ScoreConfig.include_absolute_path because it embeds local paths (and usernames) into a shareable artifact.",
+          "title": "Absolute Path"
+        },
         "content_sha256": {
           "anyOf": [
             {
@@ -89,6 +102,19 @@
           "description": "Video duration in seconds.",
           "title": "Duration S"
         },
+        "filename": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Basename of the input video (e.g. 'clip.mp4'). Safe to share.",
+          "title": "Filename"
+        },
         "fps": {
           "anyOf": [
             {
@@ -102,19 +128,6 @@
           "default": null,
           "description": "Frames per second.",
           "title": "Fps"
-        },
-        "path": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Absolute path of the input video, if known. None when the caller passed predictions directly (e.g. via score_from_predictions).",
-          "title": "Path"
         },
         "resolution": {
           "anyOf": [

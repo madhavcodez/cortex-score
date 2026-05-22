@@ -12,6 +12,7 @@ from cortex_score.schemas import (
     FRAMING_DISCLAIMER,
     FRAMING_PRIMARY,
     FRAMING_SCIENTIFIC,
+    SCHEMA_VERSION,
     AtlasMeta,
     InputMeta,
     LicenseRestriction,
@@ -19,7 +20,6 @@ from cortex_score.schemas import (
     NormalizationMeta,
     PredictionBundle,
     ProvenanceMeta,
-    SCHEMA_VERSION,
     ScoreResult,
     SegmentMeta,
     TimingMeta,
@@ -136,9 +136,7 @@ def test_score_result_requires_exactly_five_networks() -> None:
 
 def test_score_result_networks_must_be_in_order() -> None:
     timing = TimingMeta(tr_seconds=1.0, hrf_lag_seconds=5.0, n_segments=2)
-    networks = tuple(
-        _net(i, 2) for i in ("motion", "visual", "language", "faces", "attention")
-    )
+    networks = tuple(_net(i, 2) for i in ("motion", "visual", "language", "faces", "attention"))
     payload = dict(
         result_id="z" * 64,
         created_at=_dt.datetime(2026, 1, 1, tzinfo=_dt.UTC),
@@ -183,10 +181,7 @@ def test_score_result_timeseries_length_must_match_n_segments() -> None:
 
 def test_score_result_framing_defaults_are_baked_in() -> None:
     timing = TimingMeta(tr_seconds=1.0, hrf_lag_seconds=5.0, n_segments=2)
-    networks = tuple(
-        _net(i, 2)
-        for i in ("visual", "language", "faces", "attention", "motion")
-    )
+    networks = tuple(_net(i, 2) for i in ("visual", "language", "faces", "attention", "motion"))
     r = ScoreResult(
         result_id="z" * 64,
         created_at=_dt.datetime(2026, 1, 1, tzinfo=_dt.UTC),
@@ -215,8 +210,10 @@ def test_compute_result_id_is_stable() -> None:
 
 
 def test_segment_meta_is_frozen() -> None:
+    import dataclasses
+
     s = SegmentMeta(index=0, start_s=0.0, end_s=1.0)
-    with pytest.raises(Exception):
+    with pytest.raises(dataclasses.FrozenInstanceError):
         s.start_s = 99.0  # type: ignore[misc]
 
 

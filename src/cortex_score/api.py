@@ -21,7 +21,7 @@ import datetime as _dt
 import hashlib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -29,7 +29,6 @@ import numpy.typing as npt
 from cortex_score.atlas import (
     load_manifest,
     load_schaefer400,
-    load_schaefer400_to_yeo17,
     load_yeo17,
 )
 from cortex_score.exceptions import MissingOptionalDependencyError
@@ -52,12 +51,14 @@ from cortex_score.schemas import (
     ScoreWarning,
     SegmentMeta,
     TimingMeta,
+    _detect_torch_environment,
     build_provenance,
     compute_result_id,
     default_tribev2_license_restrictions,
     utc_now,
-    _detect_torch_environment,
 )
+
+_PredictionSource = Literal["tribev2", "npy", "remote", "unknown"]
 
 
 @dataclass(frozen=True)
@@ -72,20 +73,24 @@ class ScoreConfig:
         normalization_scope: how the z-score is computed. Default is
             ``"within_video"`` (the only scientifically meaningful value
             in v0.1).
+        reference_id: cross-clip reference identifier when
+            ``normalization_scope == "reference_distribution"``. None
+            for within-video.
         epsilon: ridge for the z-score std denominator.
-        include_full_timeseries: when False, the per-network
-            ``energy_timeseries`` and ``mean_z_timeseries`` are still
-            emitted (the schema requires them) but the orchestrator can
-            be configured to populate them with their summary scalars
-            only. v0.1 always emits the full timeseries — this is a
-            placeholder for a future ``compact`` mode.
-        warnings: caller-supplied warnings to merge into ``ScoreResult.warnings``.
+        include_absolute_path: when True, ``score()`` records the
+            input's absolute filesystem path in ``ScoreResult.input.absolute_path``.
+            Default False because that path embeds the local
+            filesystem layout and username — info that does not belong
+            in a shareable JSON artifact. The basename is always
+            recorded in ``input.filename`` regardless.
+        warnings: caller-supplied warnings to merge into
+            ``ScoreResult.warnings``.
     """
 
     normalization_scope: NormalizationScope = "within_video"
     reference_id: str | None = None
     epsilon: float = DEFAULT_EPS
-    include_full_timeseries: bool = True
+    include_absolute_path: bool = False
     warnings: tuple[ScoreWarning, ...] = field(default_factory=tuple)
 
 
@@ -131,13 +136,11 @@ def score_from_prediction_bundle(
 
     preds = coerce_float32(bundle.vertex_predictions)
 
-    # Schaefer-400 ROIs by mean over assigned vertices.
-    schaefer_preds = aggregate_to_rois(
-        preds,
-        schaefer.vertex_to_parcel,
-        schaefer.n_parcels,
-    )
-    # Yeo-17 networks the same way.
+    # v0.1 only emits the 5-network rollup, which is computed from
+    # Yeo-17. Schaefer-400 is still loaded and its SHA is recorded in
+    # the result's provenance (atlas.atlas_sha256) so the bundled atlas
+    # set is fully fingerprinted, but per-ROI Schaefer-400 metrics are
+    # deferred to a future v0.2 (would need a new JSON sub-schema).
     yeo_preds = aggregate_to_rois(
         preds,
         yeo.vertex_to_parcel,
@@ -199,8 +202,22 @@ def score_from_prediction_bundle(
     license_restrictions = default_tribev2_license_restrictions()
 
     created_at = utc_now()
+    # IMPORTANT: result_id is the audit identity of this ScoreResult. To
+    # remain stable across releases, it MUST cover every JSON-output
+    # field including framing strings. Building the body from the same
+    # constants ScoreResult uses for serialization keeps the hash from
+    # drifting if framing copy ever changes. (Bug caught in code review.)
+    from cortex_score.schemas import (
+        FRAMING_DISCLAIMER,
+        FRAMING_PRIMARY,
+        FRAMING_SCIENTIFIC,
+    )
+
     body: dict[str, Any] = {
         "schema_version": "1.0",
+        "framing": FRAMING_PRIMARY,
+        "framing_scientific": FRAMING_SCIENTIFIC,
+        "framing_disclaimer": FRAMING_DISCLAIMER,
         "input": input_meta.model_dump(mode="json"),
         "timing": timing.model_dump(mode="json"),
         "normalization": normalization.model_dump(mode="json"),
@@ -235,7 +252,7 @@ def score_from_predictions(
     hrf_lag_seconds: float = 5.0,
     model_id: str = "facebook/tribev2",
     model_revision: str = "unknown",
-    source: str = "npy",
+    source: _PredictionSource = "npy",
     segments: tuple[SegmentMeta, ...] | None = None,
     config: ScoreConfig | None = None,
     input_meta: InputMeta | None = None,
@@ -272,6 +289,16 @@ def score_from_predictions(
         )
         raise ValueError(msg)
 
+    # Validate at the public boundary so callers see a clear error
+    # before reaching PredictionBundle.__post_init__.
+    if not model_id:
+        raise ValueError("score_from_predictions(): model_id must be a non-empty string")
+    if not model_revision:
+        raise ValueError(
+            "score_from_predictions(): model_revision must be a non-empty string; "
+            "use 'unknown' only if you truly don't know."
+        )
+
     preds_f32 = coerce_float32(preds)
     bundle = PredictionBundle(
         vertex_predictions=preds_f32,
@@ -281,7 +308,7 @@ def score_from_predictions(
         hrf_lag_seconds=hrf_lag_seconds,
         model_id=model_id,
         model_revision=model_revision,
-        source=source,  # type: ignore[arg-type]
+        source=source,
         segments=segments or (),
     )
     return score_from_prediction_bundle(bundle, config=config, input_meta=input_meta)
@@ -321,10 +348,12 @@ def score(
 
     if runner is None:
         runner = _load_default_runner()
+    _validate_runner(runner)
 
     bundle = runner.predict_video(path)
-    input_meta = _build_input_meta(path)
-    return score_from_prediction_bundle(bundle, config=config, input_meta=input_meta)
+    cfg = config or ScoreConfig()
+    input_meta = _build_input_meta(path, include_absolute_path=cfg.include_absolute_path)
+    return score_from_prediction_bundle(bundle, config=cfg, input_meta=input_meta)
 
 
 # ---------------------------------------------------------------------
@@ -398,17 +427,59 @@ def _runner_class_path(source: str) -> str:
     return "external"
 
 
-def _build_input_meta(path: Path) -> InputMeta:
+def _validate_runner(runner: PredictionRunner) -> None:
+    """Fail fast if a custom runner doesn't carry the provenance attributes.
+
+    The ``PredictionRunner`` Protocol declares ``model_id`` and
+    ``model_revision`` as required attributes, but Python's
+    ``@runtime_checkable`` only verifies *methods*, not data attributes.
+    A custom runner missing one of these would silently pass an
+    ``isinstance(runner, PredictionRunner)`` check and then write an
+    empty string into ``ScoreResult.provenance.model_id`` /
+    ``model_revision``, corrupting the audit trail.
+
+    This guard is called once per ``score()`` invocation right before
+    ``runner.predict_video()`` so the error surfaces close to the
+    caller's point of confusion (not three frames deep inside
+    aggregation).
+    """
+    model_id = getattr(runner, "model_id", None)
+    model_revision = getattr(runner, "model_revision", None)
+    cls_name = type(runner).__name__
+    if not isinstance(model_id, str) or not model_id:
+        msg = (
+            f"Runner {cls_name} must define a non-empty 'model_id' attribute "
+            "(declared by the PredictionRunner Protocol). Provenance fields "
+            "in ScoreResult depend on it."
+        )
+        raise ValueError(msg)
+    if not isinstance(model_revision, str) or not model_revision:
+        msg = (
+            f"Runner {cls_name} must define a non-empty 'model_revision' "
+            "attribute (declared by the PredictionRunner Protocol). Use "
+            "'unknown' if a revision truly cannot be determined; never leave it empty."
+        )
+        raise ValueError(msg)
+
+
+def _build_input_meta(path: Path, *, include_absolute_path: bool = False) -> InputMeta:
     """Build an ``InputMeta`` for a real file on disk.
 
     Computes SHA-256 chunked so a 100 MB clip doesn't blow memory.
     Other fields (duration, fps, resolution) are filled in when we
     have ffprobe access — left None here to keep this helper
     side-effect-free.
+
+    Args:
+        path: source video file path.
+        include_absolute_path: when True, embed the resolved absolute
+            path in ``InputMeta.absolute_path``. Default False to avoid
+            leaking the user's filesystem layout into shareable JSON.
     """
     sha = _sha256_file(path)
     return InputMeta(
-        path=str(path.resolve()),
+        filename=path.name,
+        absolute_path=str(path.resolve()) if include_absolute_path else None,
         content_sha256=sha,
     )
 
@@ -426,11 +497,11 @@ def _sha256_file(path: Path, *, chunk_size: int = 1 << 20) -> str:
 
 # Re-exports for cortex_score.__init__.py convenience.
 __all__ = [
-    "score",
-    "score_from_predictions",
-    "score_from_prediction_bundle",
     "CortexScorer",
     "ScoreConfig",
+    "score",
+    "score_from_prediction_bundle",
+    "score_from_predictions",
 ]
 
 

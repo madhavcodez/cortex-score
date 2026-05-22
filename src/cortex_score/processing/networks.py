@@ -77,15 +77,31 @@ def _parse_groups(raw: dict[str, Any]) -> tuple[NetworkGroup, ...]:
     return tuple(groups)
 
 
-_RAW = _load_raw()
+@lru_cache(maxsize=1)
+def _yeo_labels_cached() -> tuple[str, ...]:
+    raw = _load_raw()
+    return tuple(str(label) for label in raw["yeoLabels"])
 
-YEO_LABELS: tuple[str, ...] = tuple(str(label) for label in _RAW["yeoLabels"])
-"""All 17 Yeo network labels in canonical order."""
 
-NETWORK_GROUPS: tuple[NetworkGroup, ...] = _parse_groups(_RAW)
-"""The 5-network rollup (visual, language, faces, attention, motion)."""
+@lru_cache(maxsize=1)
+def _network_groups_cached() -> tuple[NetworkGroup, ...]:
+    return _parse_groups(_load_raw())
 
-NETWORK_IDS: tuple[NetworkId, ...] = tuple(g.id for g in NETWORK_GROUPS)
+
+def __getattr__(name: str) -> Any:
+    """Lazy module-level constant resolution.
+
+    Keeps file I/O out of ``import cortex_score`` while preserving the
+    existing public API (``from cortex_score.processing.networks import
+    NETWORK_GROUPS, NETWORK_IDS, YEO_LABELS``).
+    """
+    if name == "YEO_LABELS":
+        return _yeo_labels_cached()
+    if name == "NETWORK_GROUPS":
+        return _network_groups_cached()
+    if name == "NETWORK_IDS":
+        return tuple(g.id for g in _network_groups_cached())
+    raise AttributeError(f"module 'cortex_score.processing.networks' has no attribute {name!r}")
 
 
 @lru_cache(maxsize=1)
@@ -97,7 +113,7 @@ def yeo_to_network_indices() -> dict[int, NetworkId]:
     etc.) simply don't appear in the dict.
     """
     out: dict[int, NetworkId] = {}
-    for group in NETWORK_GROUPS:
+    for group in _network_groups_cached():
         for yeo_id in group.yeo_indices:
             out[yeo_id] = group.id
     return out
@@ -141,7 +157,7 @@ def build_network_summary(
     n_yeo = z_yeo_preds.shape[1]
     summaries: list[dict[str, Any]] = []
 
-    for group in NETWORK_GROUPS:
+    for group in _network_groups_cached():
         indices = [idx for idx in group.yeo_indices if idx < n_yeo]
         if not indices:
             energy_ts = np.zeros(z_yeo_preds.shape[0], dtype=np.float32)

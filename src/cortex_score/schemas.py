@@ -37,7 +37,10 @@ from pydantic import (
     model_validator,
 )
 
-from cortex_score._version import __version__ as _CORTEX_SCORE_VERSION
+# _CORTEX_SCORE_VERSION is a module-private constant (SCREAMING_SNAKE_CASE)
+# aliasing the dunder __version__. N812 misreads "lowercase -> non-lowercase"
+# but the destination IS a constant; the alias is intentional.
+from cortex_score._version import __version__ as _CORTEX_SCORE_VERSION  # noqa: N812
 from cortex_score.processing.metrics import METRICS_VERSION
 from cortex_score.processing.networks import NetworkId
 
@@ -152,6 +155,14 @@ class PredictionBundle:
                 f"shape {self.vertex_predictions.shape}"
             )
             raise ValueError(msg)
+        if self.vertex_predictions.dtype != np.float32:
+            msg = (
+                "PredictionBundle.vertex_predictions must be float32 (got "
+                f"{self.vertex_predictions.dtype}). Use "
+                "``cortex_score.processing.validate.coerce_float32`` if you "
+                "have a float64 array."
+            )
+            raise ValueError(msg)
         if self.vertex_predictions.shape[1] != self.n_vertices:
             msg = (
                 f"PredictionBundle.n_vertices={self.n_vertices} does not "
@@ -189,14 +200,26 @@ class _StrictModel(BaseModel):
 
 
 class InputMeta(_StrictModel):
-    """Where the prediction came from on disk / wire."""
+    """Where the prediction came from on disk / wire.
 
-    path: str | None = Field(
+    ``filename`` is always safe to share — it's just the basename of the
+    input video. ``absolute_path`` is opt-in: by default it is None, so
+    shared ScoreResult JSON does not leak the user's filesystem layout
+    or home-directory username. To populate it, pass
+    ``ScoreConfig(include_absolute_path=True)`` or construct the
+    ``InputMeta`` explicitly.
+    """
+
+    filename: str | None = Field(
+        default=None,
+        description=("Basename of the input video (e.g. 'clip.mp4'). Safe to share."),
+    )
+    absolute_path: str | None = Field(
         default=None,
         description=(
-            "Absolute path of the input video, if known. None when the "
-            "caller passed predictions directly (e.g. via "
-            "score_from_predictions)."
+            "Absolute filesystem path of the input video. Opt-in via "
+            "ScoreConfig.include_absolute_path because it embeds local "
+            "paths (and usernames) into a shareable artifact."
         ),
     )
     content_sha256: str | None = Field(
@@ -429,8 +452,18 @@ class ScoreResult(_StrictModel):
         return self.model_dump_json(indent=indent)
 
     def save(self, path: str | Path) -> Path:
-        """Write the JSON serialization to ``path``."""
-        dest = Path(path)
+        """Write the JSON serialization to ``path``.
+
+        The path is resolved to an absolute location before any
+        filesystem operation so the returned ``Path`` reflects what
+        actually got written, and so callers passing relative paths
+        don't get surprised by the current working directory.
+
+        Callers who pass a user-supplied path should still validate it
+        themselves — this method does NOT confine the output to a
+        sandbox (it is a library, not a privilege boundary).
+        """
+        dest = Path(path).resolve()
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(self.to_json(), encoding="utf-8")
         return dest
@@ -501,7 +534,7 @@ def _detect_torch_environment() -> tuple[str | None, bool | None, str | None]:
     if "torch" not in sys.modules:
         return None, None, None
     try:
-        import torch  # type: ignore[import-not-found]
+        import torch
     except ImportError:
         return None, None, None
     cuda = bool(torch.cuda.is_available())

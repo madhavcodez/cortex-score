@@ -1,0 +1,92 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-type-test:
+    name: lint + type + test (no GPU)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # hatch-vcs needs git history
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[cli,dev]"
+      - name: Lint
+        run: ruff check src tests
+      - name: Format check
+        run: ruff format --check src tests
+      - name: Type check
+        run: mypy src
+      - name: Unit + integration tests (skip slow/gpu)
+        run: pytest -m "not slow and not gpu" --cov=cortex_score --cov-report=xml
+      - name: Upload coverage
+        if: matrix.python == '3.11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
+
+  packaging:
+    name: build + twine check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: |
+          python -m pip install --upgrade pip build twine
+          python -m build
+          python -m twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  import-without-gpu:
+    name: importable with no torch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install base only (no [gpu-deps])
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+      - name: Confirm torch absent
+        run: python -c "import sys; assert 'torch' not in sys.modules; import cortex_score; print(cortex_score.__version__)"
+      - name: CPU-only smoke
+        run: |
+          python -c "
+          import numpy as np
+          from cortex_score import score_from_predictions
+          preds = np.random.randn(4, 20484).astype('float32')
+          r = score_from_predictions(preds, model_revision='ci')
+          assert len(r.networks) == 5
+          print('cpu smoke OK', r.result_id[:12])
+          "

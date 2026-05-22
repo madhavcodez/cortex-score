@@ -28,6 +28,7 @@ from typing import Any
 
 try:
     import typer
+
     _HAS_TYPER = True
 except ImportError:  # pragma: no cover - exercised only when [cli] missing
     _HAS_TYPER = False
@@ -45,7 +46,7 @@ def _no_typer_app() -> int:
 
 if not _HAS_TYPER:
 
-    def app() -> int:  # type: ignore[no-redef]
+    def app() -> int:
         return _no_typer_app()
 
 else:
@@ -54,11 +55,15 @@ else:
     import numpy as np
 
     from cortex_score import (
-        __version__ as _CS_VERSION,
+        __version__ as _cs_version,
     )
     from cortex_score.api import (
         ScoreConfig,
+    )
+    from cortex_score.api import (
         score as _score_fn,
+    )
+    from cortex_score.api import (
         score_from_predictions as _score_from_predictions_fn,
     )
     from cortex_score.cache import CacheStore, default_cache_dir
@@ -76,11 +81,7 @@ else:
 
     app = typer.Typer(
         name="cortex-score",
-        help=(
-            f"{FRAMING_PRIMARY}\n\n"
-            f"{FRAMING_SCIENTIFIC}\n\n"
-            f"{FRAMING_DISCLAIMER}"
-        ),
+        help=(f"{FRAMING_PRIMARY}\n\n{FRAMING_SCIENTIFIC}\n\n{FRAMING_DISCLAIMER}"),
         no_args_is_help=True,
         add_completion=False,
     )
@@ -113,11 +114,11 @@ else:
         report.append(("python", sys.version.split()[0], "ok"))
 
         # cortex-score version
-        report.append(("cortex-score", _CS_VERSION, "ok"))
+        report.append(("cortex-score", _cs_version, "ok"))
 
         # Optional ML stack
         try:
-            import torch  # type: ignore[import-not-found]
+            import torch
 
             cuda = bool(torch.cuda.is_available())
             cuda_str = "available" if cuda else "absent"
@@ -126,7 +127,7 @@ else:
             report.append(("torch", "not installed", "install [gpu-deps]"))
 
         try:
-            import tribev2  # type: ignore[import-not-found]
+            import tribev2
 
             rev = getattr(tribev2, "__version__", "unknown")
             report.append(("tribev2", str(rev), "ok"))
@@ -146,12 +147,10 @@ else:
 
         # HF auth
         try:
-            from huggingface_hub import HfFolder  # type: ignore[import-not-found]
+            from huggingface_hub import HfFolder
 
             token = HfFolder.get_token()
-            report.append(
-                ("hf-token", "present" if token else "absent", "huggingface-cli login")
-            )
+            report.append(("hf-token", "present" if token else "absent", "huggingface-cli login"))
         except ImportError:
             report.append(("huggingface-hub", "not installed", "install [gpu-deps]"))
 
@@ -176,7 +175,9 @@ else:
 
     @app.command(name="score")
     def score(
-        videos: list[Path] = typer.Argument(..., metavar="VIDEO...", help="One or more video files."),
+        videos: list[Path] = typer.Argument(
+            ..., metavar="VIDEO...", help="One or more video files."
+        ),
         output: Path | None = typer.Option(
             None, "--output", "-o", help="Output JSON path (single-video mode only)."
         ),

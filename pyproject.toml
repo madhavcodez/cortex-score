@@ -156,9 +156,9 @@ plugins = ["pydantic.mypy"]
 exclude = ["build/", "dist/", ".venv/"]
 
 [[tool.mypy.overrides]]
-# tribev2, whisperx, moviepy, cv2 are imported lazily inside function
-# bodies and may not be present in the dev environment. Don't fail the
-# mypy run on those.
+# tribev2, whisperx, moviepy, cv2, pandas, etc. are imported lazily
+# inside function bodies and may not be present in the dev environment.
+# Don't fail the mypy run on those.
 module = [
   "tribev2.*",
   "whisperx",
@@ -173,6 +173,8 @@ module = [
   "huggingface_hub.*",
   "torch",
   "torch.*",
+  "pandas",
+  "pandas.*",
 ]
 ignore_missing_imports = true
 

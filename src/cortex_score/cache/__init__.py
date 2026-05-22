@@ -24,8 +24,8 @@ from cortex_score.cache.store import (
 )
 
 __all__ = [
-    "prediction_cache_key",
-    "score_cache_key",
     "CacheStore",
     "default_cache_dir",
+    "prediction_cache_key",
+    "score_cache_key",
 ]

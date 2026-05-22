@@ -61,9 +61,7 @@ def _strip_volatile(payload: dict) -> dict:
 def test_schema_snapshot_exists_and_matches() -> None:
     expected = json.loads(_SCHEMA_FIXTURE.read_text(encoding="utf-8"))
     actual = ScoreResult.model_json_schema()
-    assert (
-        actual == expected
-    ), (
+    assert actual == expected, (
         f"ScoreResult JSON Schema diverged from {_SCHEMA_FIXTURE}. "
         "Either revert the schema change OR bump SCHEMA_VERSION and "
         f"re-snapshot. (current SCHEMA_VERSION={SCHEMA_VERSION!r})"

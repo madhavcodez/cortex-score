@@ -106,7 +106,9 @@ class TribeV2Runner:
         self.tr_seconds = tr_seconds
         self.hrf_lag_seconds = hrf_lag_seconds
         self._model: object | None = None
-        _emit_license_warning_once()
+        # CC-BY-NC license warning is emitted on first ``_load()``, not
+        # at construction time, so building a runner is side-effect free
+        # for tests and advisory uses (e.g. reading ``model_revision``).
 
     # ------------------------------------------------------------------
 
@@ -116,7 +118,7 @@ class TribeV2Runner:
             return
 
         try:
-            from tribev2.demo_utils import TribeModel  # type: ignore[import-not-found]
+            from tribev2.demo_utils import TribeModel
         except ImportError as exc:
             raise MissingOptionalDependencyError(
                 package="tribev2",
@@ -125,6 +127,9 @@ class TribeV2Runner:
                     "    pip install -r requirements/tribev2-gpu.txt"
                 ),
             ) from exc
+
+        # TRIBE is actually present -> emit the CC-BY-NC reminder once.
+        _emit_license_warning_once()
 
         # ffmpeg / uvx are runtime requirements of TRIBE's preprocessing.
         # Surface their absence as ``MissingExternalToolError`` so the
@@ -202,7 +207,7 @@ def _parse_segments(segments_obj: object) -> tuple[SegmentMeta, ...]:
 
     # pandas DataFrame path
     try:
-        import pandas as pd  # type: ignore[import-not-found]
+        import pandas as pd
 
         if isinstance(segments_obj, pd.DataFrame):
             cols = {c.lower(): c for c in segments_obj.columns}
@@ -223,14 +228,34 @@ def _parse_segments(segments_obj: object) -> tuple[SegmentMeta, ...]:
         pass
 
     # Iterable-of-dicts fallback
+    from collections.abc import Iterable
+    from typing import cast
+
+    if not isinstance(segments_obj, Iterable):
+        return ()
+
+    iterable = cast(Iterable[object], segments_obj)
+
+    def _pick(d: dict[str, object], *keys: str, default: float = 0.0) -> float:
+        """Return the first present key's value as a float.
+
+        Uses ``in`` rather than truthiness because a legitimate
+        ``0.0`` second (start of clip) would otherwise be skipped by
+        ``or``-chaining. This was the bug surfaced in pre-v0.1
+        code review.
+        """
+        for key in keys:
+            if key in d:
+                return float(d[key])  # type: ignore[arg-type]
+        return default
+
     try:
-        for i, item in enumerate(segments_obj):  # type: ignore[arg-type]
+        for i, item in enumerate(iterable):
             if isinstance(item, dict):
-                start = item.get("start") or item.get("start_s") or item.get("t_start") or 0.0
-                end = item.get("end") or item.get("end_s") or item.get("t_end") or 0.0
-                out.append(
-                    SegmentMeta(index=i, start_s=float(start), end_s=float(end))
-                )
+                d = cast(dict[str, object], item)
+                start = _pick(d, "start", "start_s", "t_start")
+                end = _pick(d, "end", "end_s", "t_end")
+                out.append(SegmentMeta(index=i, start_s=start, end_s=end))
         return tuple(out)
     except TypeError:
         return ()
