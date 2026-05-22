@@ -14,28 +14,33 @@
 
 **Score any video for predicted cortical engagement across 5 brain networks.**
 
-[🎯 Overview](#-overview) · [✨ Capabilities](#-capabilities) · [🏗️ Architecture](#%EF%B8%8F-architecture) · [🔥 ScoreResult](#-scoreresult-spotlight) · [🚀 Start](#-getting-started) · [🔌 API](#-api-surface) · [🎨 Tokens](#-design-tokens) · [🔐 Licenses](#-licenses)
+[Overview](#overview) · [Features](#features) · [Architecture](#architecture) · [Output](#output-anatomy) · [Quickstart](#getting-started) · [API](#api) · [Schema](#json-schema) · [Palette](#network-palette) · [Licenses](#licenses)
 
 </div>
 
 ---
 
-## 🎯 Overview
+## Overview
 
-`cortex-score` is an installable Python library that wraps **Meta FAIR's TRIBE v2** brain-encoding model behind a three-line API. Hand it a video, get back a versioned JSON object summarizing the predicted cortical response across five Cortexia-defined network groups: **visual · language · faces · attention · motion**.
+`cortex-score` predicts how a video would activate different parts of the brain. Drop in any mp4 and get back a JSON breakdown of how strongly five regions — **visual, language, faces, attention, motion** — are likely to engage. The numbers come from **Meta FAIR's TRIBE v2**, an AI model trained on fMRI scans of people watching videos.
 
-The package ships in two tiers:
+**Useful for:**
 
-- **Tier A — CPU-only postprocessing.** You already have `(T, V)` vertex predictions from TRIBE v2 elsewhere. `score_from_predictions(preds, ...)` aggregates, normalizes, rolls up to 5 networks, and emits a Pydantic-validated `ScoreResult` JSON. Pure NumPy, no torch import, milliseconds on a laptop.
-- **Tier B — Full pipeline.** `score("clip.mp4")` runs TRIBE v2 end-to-end on a GPU and emits the same `ScoreResult`. Requires the `[gpu-deps]` extra plus TRIBE v2 itself (installed separately because PyPI rejects Git-URL deps in package metadata).
+- Ranking or filtering a video library by which clips engage which brain regions
+- Building creative tools that need a richer, structured signal than view count or watch time
+- Research on what visual, linguistic, or social content a clip is loaded with — without recording your own fMRI
+- Dropping into AI-video pipelines as a content-understanding step before re-cuts, captions, or recommendations
 
-> **What it actually does:** `cortex-score` summarizes TRIBE v2 *predicted* cortical responses for any video across five Cortexia-defined network groups, for an "average subject" on the **fsaverage5** cortical mesh.
->
-> **What it does *not* do:** `cortex-score` does **not** measure real viewer engagement. The numbers are predictions from a pretrained brain-encoding model, not measurements from a real viewer's fMRI.
+**Not a brain scan.** These are AI predictions, not measurements of any real viewer. Treat them as a creative signal, not a clinical one.
+
+### Two ways to use it
+
+- `score("clip.mp4")` — full pipeline. Runs TRIBE v2 end-to-end on a GPU. Requires the `[gpu-deps]` extra plus TRIBE v2 itself (installed separately because PyPI rejects Git-URL deps).
+- `score_from_predictions(preds, ...)` — CPU-only postprocessing. Hand it a `(T, 20484)` prediction tensor you computed elsewhere; the package aggregates, normalizes, and emits the same JSON in milliseconds on a laptop.
 
 ---
 
-## ✨ Capabilities
+## Features
 
 <img src="docs/images/feature-gallery.svg" alt="cortex-score capabilities: CPU-only tier, 5-network rollup, provenance, atlas integrity, two-tier cache, Pydantic schema" width="100%"/>
 
@@ -50,7 +55,7 @@ The package ships in two tiers:
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 flowchart TB
@@ -162,25 +167,25 @@ sequenceDiagram
 
 ---
 
-## 🔥 ScoreResult spotlight
+## Output anatomy
 
 <img src="docs/images/spotlight-scoreresult.svg" alt="ScoreResult JSON anatomy + audit trail" width="100%"/>
 
-Every score is a self-describing, downstream-safe scientific artifact. The contract is locked behind `SCHEMA_VERSION = "1.0"`; breaking changes will bump it explicitly.
+Every score is a self-describing JSON object. The contract is locked behind `SCHEMA_VERSION = "1.0"`; any breaking change bumps it explicitly.
 
-| Field | Why it matters |
+| Field | What it gives you |
 |---|---|
-| `result_id` | SHA-256 of the canonical payload — stable audit identity across runs |
-| `provenance.model_revision` | Pinned TRIBE v2 commit (`34f52344e5ba…`) — knows which model produced the numbers |
-| `atlas.atlas_sha256` + `yeo_atlas_sha256` + `network_groups_sha256` | Bundled-data fingerprints — knows which atlas the score was computed against |
-| `normalization.scope` | `within_video` by default — explicit reminder that two clips are NOT comparable on the same axis unless `reference_distribution` is used |
-| `license_restrictions[]` | TRIBE v2 CC-BY-NC-4.0 recorded in-band — downstream code can't ignore the non-commercial restriction |
-| `input.filename` + `input.absolute_path` | Basename by default; absolute path is opt-in via `ScoreConfig(include_absolute_path=True)` — no PII leak in shareable JSON |
-| `framing` + `framing_scientific` + `framing_disclaimer` | Headline framing + scientific clarification + "this is not measured engagement" disclaimer baked into the artifact |
+| `result_id` | SHA-256 of the payload — a stable id for caches, audit logs, dedup |
+| `provenance.model_revision` | Which TRIBE v2 commit produced the numbers (`34f52344e5ba…`) |
+| `atlas.*_sha256` | Fingerprints of the exact Schaefer / Yeo / network-group data used |
+| `normalization.scope` | `within_video` by default — two clips are NOT comparable on the same axis unless you opt into a reference distribution |
+| `license_restrictions[]` | TRIBE v2 CC-BY-NC-4.0 recorded in-band so downstream code can't lose track of it |
+| `input.filename` / `absolute_path` | Basename only by default; absolute path is opt-in to keep shareable JSON free of usernames or local paths |
+| `framing` family | Three short human-readable strings baked into the JSON so the context follows the artifact wherever it goes |
 
 ---
 
-## 🛠️ Tech stack
+## Tech stack
 
 | Layer | Choice | Why |
 |---|---|---|
@@ -197,7 +202,7 @@ Every score is a self-describing, downstream-safe scientific artifact. The contr
 
 ---
 
-## 🚀 Getting started
+## Getting started
 
 ### Install
 
@@ -258,7 +263,7 @@ cortex-score cache info           # cache root + counts
 
 ---
 
-## 🔌 API surface
+## API
 
 ### Public entry points
 
@@ -299,7 +304,7 @@ class MyRunner:
 
 ---
 
-## 📦 Output schema
+## JSON schema
 
 ```mermaid
 stateDiagram-v2
@@ -349,7 +354,7 @@ cortex-score schema > cortex-score.schema.json
 
 ---
 
-## 🎨 Design tokens
+## Network palette
 
 The five-network palette comes straight from the Cortexia design system. Use these exact hex values when visualizing `cortex-score` output downstream — they are also embedded in `network_groups.json` and exposed via `NetworkScore.color`.
 
@@ -365,7 +370,7 @@ The grouping itself (`network_groups.json`) is **product-design**, not canonical
 
 ---
 
-## 🔐 Licenses
+## Licenses
 
 This repository is governed by **two layers of licensing** — read both before commercial use.
 
@@ -381,7 +386,7 @@ See [`LICENSE-THIRD-PARTY.md`](LICENSE-THIRD-PARTY.md) for the full notice and c
 
 ---
 
-## 🔬 Reproducibility
+## Reproducibility
 
 Real smoke-test numbers from a Modal A100 run on Cortexia clip `0043e171…` (5.3 s, short-form vertical):
 
