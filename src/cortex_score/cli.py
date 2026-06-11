@@ -185,10 +185,8 @@ else:
             None, "--output-dir", help="Directory for per-video JSON (required for batch)."
         ),
         compact: bool = typer.Option(False, "--compact", help="Serialize without indent."),
-        no_cache: bool = typer.Option(False, "--no-cache", help="Skip cache for this run."),
     ) -> None:
         """Full pipeline: video(s) -> ScoreResult JSON."""
-        _ = no_cache  # cache integration ships in v0.1.1
         if len(videos) > 1 and output_dir is None:
             _log("multiple inputs require --output-dir")
             raise typer.Exit(code=2)
@@ -207,7 +205,12 @@ else:
         except MissingOptionalDependencyError as exc:
             _log(str(exc))
             raise typer.Exit(code=3) from exc
-        except CortexScoreError as exc:
+        except (CortexScoreError, FileNotFoundError, ValueError) as exc:
+            # FileNotFoundError (missing video) and ValueError (bad input)
+            # are not CortexScoreError subclasses; catch them here so the
+            # user gets a clean stderr message + exit 1 instead of a raw
+            # Python traceback. MissingOptionalDependencyError (above) keeps
+            # its dedicated exit code 3.
             _log(f"error: {exc}")
             raise typer.Exit(code=1) from exc
 
@@ -241,7 +244,10 @@ else:
                 model_revision=model_revision,
                 source="npy",
             )
-        except CortexScoreError as exc:
+        except (CortexScoreError, ValueError) as exc:
+            # Unsupported --mesh, bad --tr, or a non-2D / non-finite tensor
+            # surface as ValueError at the boundary; keep them off the
+            # traceback path. (UnsupportedMeshError is both, caught here.)
             _log(f"error: {exc}")
             raise typer.Exit(code=1) from exc
 

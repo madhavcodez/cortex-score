@@ -12,7 +12,8 @@ a model trained on fMRI scans of people watching videos.
 > viewer. Treat them as a creative signal, not a clinical one.
 
 I built this to make a brain-encoding model usable from a few lines of Python.
-It's a pre-release (v0.1) — not on PyPI yet.
+It's an early release (v0.1): the CPU-only postprocessing tier is stable, and the
+JSON output contract is locked behind `SCHEMA_VERSION = "1.0"`.
 
 **Useful for:**
 
@@ -115,7 +116,7 @@ sequenceDiagram
     RUN-->>API: PredictionBundle
     API->>POST: aggregate → Yeo-17 → z-score
     POST-->>SCH: 5 networks + metrics
-    SCH->>SCH: result_id = sha256(body)
+    SCH->>SCH: result_id = sha256(canonical JSON, id blanked)
     SCH-->>U: ScoreResult JSON
 ```
 
@@ -211,6 +212,7 @@ class MyRunner:
 | `MissingOptionalDependencyError` | `[gpu-deps]` / `tribev2` missing when `score()` is called without a runner |
 | `MissingExternalToolError` | `ffmpeg` / `uvx` absent on PATH at TRIBE-load time |
 | `IncompatiblePredictionShapeError` | `preds.shape[1]` doesn't match the mesh's vertex count |
+| `UnsupportedMeshError` | A `mesh=` other than `fsaverage5` was requested (subclasses `ValueError` and `CortexScoreError`) |
 | `AtlasMismatchError` | Bundled atlas SHA-256 disagrees with `data/manifest.json` (corrupted wheel) |
 
 ## Output
@@ -220,7 +222,7 @@ Every score is a self-describing JSON object. The contract is locked behind
 
 | Field | What it gives you |
 |---|---|
-| `result_id` | SHA-256 of the payload — a stable id for caches, audit logs, dedup |
+| `result_id` | SHA-256 of the result's own canonical JSON (with `result_id` blanked) — reproducible from the JSON alone, so it verifies as a stable id for caches, audit logs, dedup |
 | `provenance.model_revision` | Which TRIBE v2 commit produced the numbers |
 | `atlas.*_sha256` | Fingerprints of the exact Schaefer / Yeo / network-group data used |
 | `normalization.scope` | `within_video` by default — two clips aren't comparable on the same axis unless you opt into a reference distribution |
@@ -272,7 +274,7 @@ embedded in `network_groups.json` and exposed via `NetworkScore.color`.
 - **platformdirs** — XDG / `%LOCALAPPDATA%` cache dirs, override via `CORTEX_SCORE_CACHE_DIR`
 - **Bundled atlas** — Schaefer 2018 + Yeo 2011 on fsaverage5, SHA-256 fingerprinted (~337 KB)
 - **Encoder** — TRIBE v2 @ `34f52344` (Llama 3.2-3B + V-JEPA2 + W2V-BERT), pinned to commit
-- **Tests** — `pytest` + `hypothesis`, 125 tests at 87.95% coverage, `ruff` + `mypy --strict` clean
+- **Tests** — `pytest` + `hypothesis`, 135 tests at ~90% coverage, `ruff` + `mypy --strict` clean
 
 ## Licenses
 

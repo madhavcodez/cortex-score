@@ -66,14 +66,11 @@ def aggregate_to_rois(
 
     t = preds.shape[0]
     out = np.zeros((t, n_rois), dtype=np.float32)
-    counts = np.zeros(n_rois, dtype=np.int64)
 
     for roi_id in range(n_rois):
         mask = vertex_to_roi == roi_id
-        n_verts = int(mask.sum())
-        if n_verts == 0:
+        if not mask.any():
             continue
-        counts[roi_id] = n_verts
         out[:, roi_id] = preds[:, mask].mean(axis=1, dtype=np.float32)
 
     return out

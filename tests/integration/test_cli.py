@@ -93,3 +93,30 @@ def test_score_requires_output_dir_for_multiple_inputs(tmp_path: Path) -> None:
     result = runner.invoke(app, ["score", str(v1), str(v2)])
     assert result.exit_code == 2
     assert "--output-dir" in result.output or "output-dir" in (result.stderr or "")
+
+
+def test_score_missing_file_exits_cleanly(tmp_path: Path) -> None:
+    """A missing video must exit 1 with a clean message, not a traceback."""
+    result = runner.invoke(app, ["score", str(tmp_path / "nope.mp4")])
+    assert result.exit_code == 1
+    assert "not found" in result.output
+    # No leaked Python traceback.
+    assert "Traceback" not in result.output
+
+
+def test_from_predictions_unsupported_mesh_exits_cleanly(tmp_path: Path) -> None:
+    preds_path = tmp_path / "p.npy"
+    np.save(preds_path, np.random.default_rng(2).standard_normal((3, 20484)).astype(np.float32))
+    result = runner.invoke(app, ["from-predictions", str(preds_path), "--mesh", "fsaverage6"])
+    assert result.exit_code == 1
+    assert "not supported" in result.output
+    assert "Traceback" not in result.output
+
+
+def test_from_predictions_non_2d_npy_exits_cleanly(tmp_path: Path) -> None:
+    preds_path = tmp_path / "bad.npy"
+    np.save(preds_path, np.zeros(20484, dtype=np.float32))  # 1-D
+    result = runner.invoke(app, ["from-predictions", str(preds_path)])
+    assert result.exit_code == 1
+    assert "2D" in result.output
+    assert "Traceback" not in result.output

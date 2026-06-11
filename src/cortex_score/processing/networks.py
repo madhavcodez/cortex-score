@@ -19,6 +19,8 @@ from typing import Any, Literal, cast
 import numpy as np
 import numpy.typing as npt
 
+from cortex_score.exceptions import AtlasMismatchError
+
 NetworkId = Literal["visual", "language", "faces", "attention", "motion"]
 """Canonical id type for the 5-network rollup.
 
@@ -155,17 +157,26 @@ def build_network_summary(
         raise ValueError(msg)
 
     n_yeo = z_yeo_preds.shape[1]
+    groups = _network_groups_cached()
+
+    # An out-of-range Yeo index means the input array and the bundled
+    # network-group definitions disagree (e.g. a mis-sized z_yeo_preds).
+    # Silently filtering such indices produced a plausible-looking
+    # zero-energy network instead of surfacing the mismatch — fail loudly.
+    max_index = max((idx for g in groups for idx in g.yeo_indices), default=-1)
+    if max_index >= n_yeo:
+        msg = (
+            f"network group definitions reference Yeo index {max_index} but "
+            f"z_yeo_preds has only {n_yeo} columns; atlas / network_groups mismatch"
+        )
+        raise AtlasMismatchError(msg)
+
     summaries: list[dict[str, Any]] = []
 
-    for group in _network_groups_cached():
-        indices = [idx for idx in group.yeo_indices if idx < n_yeo]
-        if not indices:
-            energy_ts = np.zeros(z_yeo_preds.shape[0], dtype=np.float32)
-            mean_z_ts = np.zeros(z_yeo_preds.shape[0], dtype=np.float32)
-        else:
-            group_ts = z_yeo_preds[:, indices]
-            energy_ts = np.abs(group_ts).mean(axis=1).astype(np.float32)
-            mean_z_ts = group_ts.mean(axis=1).astype(np.float32)
+    for group in groups:
+        group_ts = z_yeo_preds[:, list(group.yeo_indices)]
+        energy_ts = np.abs(group_ts).mean(axis=1).astype(np.float32)
+        mean_z_ts = group_ts.mean(axis=1).astype(np.float32)
 
         summaries.append(
             {

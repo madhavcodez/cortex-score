@@ -66,6 +66,23 @@ class IncompatiblePredictionShapeError(CortexScoreError, ValueError):
         self.mesh = mesh
 
 
+class UnsupportedMeshError(CortexScoreError, ValueError):
+    """Raised when a caller requests a cortical mesh this version doesn't ship.
+
+    Subclasses ``ValueError`` (so existing ``except ValueError`` blocks keep
+    working) *and* ``CortexScoreError`` (so the documented ``except
+    CortexScoreError`` boundary — used by the CLI — catches it instead of
+    leaking a raw traceback).
+    """
+
+    def __init__(self, mesh: str, supported: tuple[str, ...]) -> None:
+        supported_str = ", ".join(repr(m) for m in supported)
+        msg = f"mesh={mesh!r} is not supported in this version; supported: {supported_str}."
+        super().__init__(msg)
+        self.mesh = mesh
+        self.supported = supported
+
+
 class AtlasMismatchError(CortexScoreError, ValueError):
     """Raised when atlas vertex/parcel assignments are internally inconsistent.
 
@@ -99,5 +116,9 @@ class PreprocessingWarning(UserWarning):
     could affect interpretation — letterboxing, aspect-ratio resampling,
     or significant frame-rate downsampling.
 
-    Surfaces in ``ScoreResult.warnings`` as well.
+    This is a Python ``warnings`` category, distinct from the
+    ``ScoreWarning`` Pydantic model recorded in ``ScoreResult.warnings``.
+    Code that emits this warning and also wants it in the result artifact
+    is responsible for appending a corresponding ``ScoreWarning`` via
+    ``ScoreConfig.warnings`` — there is no automatic bridge between the two.
     """

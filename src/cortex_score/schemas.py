@@ -25,7 +25,7 @@ import platform
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -37,12 +37,13 @@ from pydantic import (
     model_validator,
 )
 
+from cortex_score.processing.metrics import METRICS_VERSION
+from cortex_score.processing.networks import NetworkId
+
 # _CORTEX_SCORE_VERSION is a module-private constant (SCREAMING_SNAKE_CASE)
 # aliasing the dunder __version__. N812 misreads "lowercase -> non-lowercase"
 # but the destination IS a constant; the alias is intentional.
-from cortex_score._version import __version__ as _CORTEX_SCORE_VERSION  # noqa: N812
-from cortex_score.processing.metrics import METRICS_VERSION
-from cortex_score.processing.networks import NetworkId
+from cortex_score.version import __version__ as _CORTEX_SCORE_VERSION  # noqa: N812
 
 SCHEMA_VERSION: str = "1.0"
 """Top-level schema version. Bump on any breaking JSON contract change."""
@@ -224,7 +225,8 @@ class InputMeta(_StrictModel):
     )
     content_sha256: str | None = Field(
         default=None,
-        description="SHA-256 of the input bytes, if a file was provided.",
+        pattern=r"^[0-9a-fA-F]{64}$",
+        description="SHA-256 (hex) of the input bytes, if a file was provided.",
     )
     duration_s: float | None = Field(
         default=None,
@@ -281,19 +283,16 @@ class AtlasMeta(_StrictModel):
         description="Bundled atlas identifier (e.g. 'schaefer2018-400-yeo17-fsaverage5')."
     )
     atlas_sha256: str = Field(
-        min_length=64,
-        max_length=64,
-        description="SHA-256 of the Schaefer-400 vertex .npy used.",
+        pattern=r"^[0-9a-f]{64}$",
+        description="SHA-256 (lowercase hex) of the Schaefer-400 vertex .npy used.",
     )
     yeo_atlas_sha256: str = Field(
-        min_length=64,
-        max_length=64,
-        description="SHA-256 of the Yeo-17 vertex .npy used.",
+        pattern=r"^[0-9a-f]{64}$",
+        description="SHA-256 (lowercase hex) of the Yeo-17 vertex .npy used.",
     )
     network_groups_sha256: str = Field(
-        min_length=64,
-        max_length=64,
-        description="SHA-256 of network_groups.json used.",
+        pattern=r"^[0-9a-f]{64}$",
+        description="SHA-256 (lowercase hex) of network_groups.json used.",
     )
     network_group_source: str = Field(
         description="Group definition source id (e.g. 'cortexia-network-groups-v1')."
@@ -307,21 +306,22 @@ class ProvenanceMeta(_StrictModel):
     input bytes.
     """
 
-    cortex_score_version: str
+    cortex_score_version: str = Field(min_length=1)
     schema_version: str = SCHEMA_VERSION
     metrics_version: str = METRICS_VERSION
     serialization_version: str = SERIALIZATION_VERSION
-    model_id: str
-    model_revision: str
+    model_id: str = Field(min_length=1)
+    model_revision: str = Field(min_length=1)
     tribev2_package_version: str | None = None
     runner: str = Field(
+        min_length=1,
         description=(
             "Fully qualified class name of the runner that produced the "
             "predictions (e.g. 'cortex_score.runners.tribev2.TribeV2Runner') "
             "or 'external' when score_from_predictions was used directly."
-        )
+        ),
     )
-    python_version: str
+    python_version: str = Field(min_length=1)
     torch_version: str | None = None
     cuda_available: bool | None = None
     device: str | None = None
@@ -357,23 +357,23 @@ class NetworkScore(_StrictModel):
     energy_timeseries: tuple[float, ...]
     mean_z_timeseries: tuple[float, ...]
     group_definition_sha256: str = Field(
-        min_length=64,
-        max_length=64,
-        description="SHA-256 of the network_groups.json that defined this group.",
+        pattern=r"^[0-9a-f]{64}$",
+        description="SHA-256 (lowercase hex) of the network_groups.json that defined this group.",
     )
 
-    @field_validator("yeo_labels")
-    @classmethod
-    def _labels_match_indices(
-        cls,
-        v: tuple[str, ...],
-        info: Any,
-    ) -> tuple[str, ...]:
-        idx = info.data.get("yeo_indices") if hasattr(info, "data") else None
-        if idx is not None and len(idx) != len(v):
-            msg = f"yeo_labels length {len(v)} does not match yeo_indices length {len(idx)}"
+    @model_validator(mode="after")
+    def _labels_match_indices(self) -> NetworkScore:
+        # model_validator(mode="after") sees both fields as typed
+        # attributes — no Pydantic field-ordering dependency, no dict
+        # lookup, no dead hasattr guard. Matches the cross-field pattern
+        # used by NormalizationMeta and ScoreResult in this module.
+        if len(self.yeo_labels) != len(self.yeo_indices):
+            msg = (
+                f"yeo_labels length {len(self.yeo_labels)} does not match "
+                f"yeo_indices length {len(self.yeo_indices)}"
+            )
             raise ValueError(msg)
-        return v
+        return self
 
 
 class ScoreResult(_StrictModel):
@@ -387,8 +387,10 @@ class ScoreResult(_StrictModel):
     schema_version: str = SCHEMA_VERSION
     result_id: str = Field(
         description=(
-            "SHA-256 of the canonical JSON of this result with result_id "
-            "itself set to the empty string. Stable hash for audit logs."
+            "SHA-256 audit identity. Computed as the hash of this result's "
+            "model_dump(mode='json') with result_id set to '', re-serialized "
+            "with sorted keys and compact separators. Reproducible from the "
+            "JSON alone, so consumers can verify it. See compute_result_id()."
         ),
     )
     created_at: _dt.datetime = Field(
@@ -474,11 +476,31 @@ class ScoreResult(_StrictModel):
 # ---------------------------------------------------------------------
 
 
-def compute_result_id(payload_without_id: dict[str, Any]) -> str:
-    """Stable SHA-256 of a result payload with ``result_id`` cleared."""
-    payload = dict(payload_without_id)
-    payload["result_id"] = ""
-    raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+def compute_result_id(result: ScoreResult) -> str:
+    """Stable SHA-256 audit identity of a ``ScoreResult``.
+
+    Defined as the SHA-256 of the result's *own* canonical JSON
+    serialization with ``result_id`` blanked to the empty string:
+
+    1. ``result.model_dump(mode="json")`` — the exact field set and value
+       encoding the model serializes (so the hash can never drift away
+       from ``ScoreResult``'s real fields; the previous implementation
+       rebuilt a parallel dict by hand and silently disagreed with the
+       serialized artifact, e.g. ``+00:00`` vs ``Z`` datetimes).
+    2. ``result_id`` set to ``""``.
+    3. ``json.dumps(..., sort_keys=True, separators=(",", ":"))`` — a
+       canonical, key-order-independent, whitespace-free encoding.
+
+    Recomputing this over any serialized ``ScoreResult`` (after blanking
+    ``result_id``) reproduces the id, so downstream consumers can verify
+    the audit hash from the JSON alone. No ``default=`` fallback is used:
+    every value is already JSON-native after ``model_dump(mode="json")``,
+    so a non-serializable value is a real bug that should raise loudly
+    rather than be silently stringified.
+    """
+    cleared = result.model_copy(update={"result_id": ""})
+    payload = cleared.model_dump(mode="json")
+    raw = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
@@ -523,10 +545,6 @@ def default_tribev2_license_restrictions() -> tuple[LicenseRestriction, ...]:
 def utc_now() -> _dt.datetime:
     """Return the current UTC time (helper so tests can monkey-patch)."""
     return _dt.datetime.now(_dt.UTC)
-
-
-def python_version_string() -> str:
-    return platform.python_version()
 
 
 def _detect_torch_environment() -> tuple[str | None, bool | None, str | None]:

@@ -32,7 +32,8 @@ def validate_predictions_against_mesh(
     Raises:
         IncompatiblePredictionShapeError: if ``preds`` is not 2D, has
             zero timesteps, or vertex count does not match.
-        ValueError: on totally malformed input (zero dimensions).
+        ValueError: on totally malformed input (zero dimensions) or on
+            non-finite values (NaN / inf).
     """
     if preds.ndim != 2:
         msg = (
@@ -44,6 +45,17 @@ def validate_predictions_against_mesh(
     t, v = preds.shape
     if t < 1:
         msg = f"predictions must have at least 1 timestep; got T={t}"
+        raise ValueError(msg)
+
+    # Corrupted encoder output (NaN/inf) would otherwise sail through
+    # normalization and produce a schema-valid but numerically garbage
+    # ScoreResult. Fail loudly at the boundary instead.
+    if not np.isfinite(preds).all():
+        n_bad = int((~np.isfinite(preds)).sum())
+        msg = (
+            f"predictions contain {n_bad} non-finite value(s) (NaN or inf). "
+            "Check the upstream encoder output before scoring."
+        )
         raise ValueError(msg)
 
     if v != expected_n_vertices:

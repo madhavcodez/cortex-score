@@ -36,6 +36,7 @@ import numpy as np
 from cortex_score.exceptions import (
     MissingExternalToolError,
     MissingOptionalDependencyError,
+    PreprocessingWarning,
 )
 from cortex_score.schemas import PredictionBundle, SegmentMeta
 
@@ -214,6 +215,13 @@ def _parse_segments(segments_obj: object) -> tuple[SegmentMeta, ...]:
             start_col = cols.get("start") or cols.get("start_s") or cols.get("t_start")
             end_col = cols.get("end") or cols.get("end_s") or cols.get("t_end")
             if start_col is None or end_col is None:
+                warnings.warn(
+                    "TRIBE segments DataFrame has unrecognized columns "
+                    f"{list(segments_obj.columns)!r}; segment timing will be "
+                    "absent from the PredictionBundle.",
+                    PreprocessingWarning,
+                    stacklevel=2,
+                )
                 return ()
             for i, row in segments_obj.reset_index(drop=True).iterrows():
                 out.append(
@@ -257,5 +265,14 @@ def _parse_segments(segments_obj: object) -> tuple[SegmentMeta, ...]:
                 end = _pick(d, "end", "end_s", "t_end")
                 out.append(SegmentMeta(index=i, start_s=start, end_s=end))
         return tuple(out)
-    except TypeError:
-        return ()
+    except TypeError as exc:
+        # Unexpected element type from a future TRIBE change: keep whatever
+        # parsed cleanly and surface the rest rather than silently dropping
+        # all segments with no diagnostic.
+        warnings.warn(
+            f"TRIBE segments object raised {exc!r} during parsing; "
+            f"returning {len(out)} segment(s) parsed before the error.",
+            PreprocessingWarning,
+            stacklevel=2,
+        )
+        return tuple(out)
