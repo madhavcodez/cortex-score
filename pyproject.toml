@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=1.21", "hatch-vcs>=0.4"]
+requires = ["hatchling>=1.27", "hatch-vcs>=0.4"]
 build-backend = "hatchling.build"
 
 [project]
@@ -7,7 +7,8 @@ name = "cortex-score"
 description = "Score any video for predicted cortical engagement across 5 brain networks (visual, language, faces, attention, motion). Built on Meta FAIR's TRIBE v2 encoding model."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE", "LICENSE-THIRD-PARTY.md"]
 authors = [{ name = "Madhav Chauhan" }]
 keywords = [
   "fmri",
@@ -19,14 +20,17 @@ keywords = [
   "yeo",
   "cortical-response",
 ]
+# License metadata uses the PEP 639 SPDX expression (`license = "MIT"`
+# above); the deprecated `License ::` trove classifier is intentionally
+# omitted so PyPI does not flag a conflicting/duplicate license.
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
   "Topic :: Scientific/Engineering :: Medical Science Apps.",
@@ -87,11 +91,13 @@ Issues = "https://github.com/madhavcodez/cortex-score/issues"
 
 # ---- Hatch build configuration ---------------------------------------
 
+# hatch-vcs computes the version from git tags and writes it into the
+# built distribution metadata. We deliberately do NOT use the vcs
+# build hook to generate a `_version.py` source file: the runtime reads
+# the version back from installed metadata (see cortex_score/version.py),
+# so there is one authority and no generated artifact in the wheel.
 [tool.hatch.version]
 source = "vcs"
-
-[tool.hatch.build.hooks.vcs]
-version-file = "src/cortex_score/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cortex_score"]
@@ -127,7 +133,6 @@ include = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-extend-exclude = ["src/cortex_score/_version.py"]
 
 [tool.ruff.lint]
 select = [
@@ -194,8 +199,7 @@ filterwarnings = ["error", "ignore::DeprecationWarning"]
 branch = true
 source = ["cortex_score"]
 omit = [
-  "src/cortex_score/_version.py",
-  "src/cortex_score/runners/tribev2.py",  # GPU-only; covered by @pytest.mark.gpu
+  "src/cortex_score/runners/tribev2.py",  # GPU-only; exercised by @pytest.mark.gpu
 ]
 
 [tool.coverage.report]

@@ -197,16 +197,43 @@ def test_score_result_framing_defaults_are_baked_in() -> None:
     assert r.framing_disclaimer == FRAMING_DISCLAIMER
 
 
-def test_compute_result_id_is_stable() -> None:
-    payload = {
-        "schema_version": "1.0",
-        "input": {"path": None, "content_sha256": None},
-        "result_id": "should-be-overwritten",
-    }
-    a = compute_result_id(payload)
-    b = compute_result_id(payload)
+def _full_result(result_id: str = "z" * 64) -> ScoreResult:
+    timing = TimingMeta(tr_seconds=1.0, hrf_lag_seconds=5.0, n_segments=2)
+    networks = tuple(_net(i, 2) for i in ("visual", "language", "faces", "attention", "motion"))
+    return ScoreResult(
+        result_id=result_id,
+        created_at=_dt.datetime(2026, 1, 1, tzinfo=_dt.UTC),
+        input=InputMeta(),
+        timing=timing,
+        normalization=NormalizationMeta(epsilon=1e-6),
+        atlas=_atlas(),
+        provenance=build_provenance(model_id="x", model_revision="y", runner="external"),
+        networks=networks,
+    )
+
+
+def test_compute_result_id_is_stable_and_blank_invariant() -> None:
+    result = _full_result()
+    a = compute_result_id(result)
+    b = compute_result_id(result)
     assert a == b
     assert len(a) == 64
+    # result_id is blanked before hashing, so the stored value can't
+    # influence the hash.
+    assert compute_result_id(result.model_copy(update={"result_id": "x" * 64})) == a
+
+
+def test_result_id_is_verifiable_from_serialized_json() -> None:
+    """The documented contract: re-hashing a serialized result (with
+    result_id blanked) reproduces result_id. This is the round-trip the
+    old hand-built-dict implementation silently broke (Z vs +00:00)."""
+    result = _full_result().model_copy(update={"result_id": ""})
+    stamped = result.model_copy(update={"result_id": compute_result_id(result)})
+
+    rebuilt = ScoreResult.model_validate_json(stamped.to_json())
+    assert rebuilt.result_id == stamped.result_id
+    # Recompute from the deserialized object: must match.
+    assert compute_result_id(rebuilt) == stamped.result_id
 
 
 def test_segment_meta_is_frozen() -> None:

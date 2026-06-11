@@ -2,10 +2,14 @@ cff-version: 1.2.0
 title: "cortex-score"
 message: "If you use this software, please cite both this package and the underlying TRIBE v2 brain-encoding model."
 type: software
+version: "0.1.0"
+date-released: "2026-06-10"
+license: MIT
 authors:
   - given-names: Madhav
     family-names: Chauhan
 repository-code: "https://github.com/madhavcodez/cortex-score"
+url: "https://github.com/madhavcodez/cortex-score"
 abstract: >-
   cortex-score packages the TRIBE v2 brain-encoding pipeline as an installable
   Python library that summarizes predicted cortical responses for any video
@@ -17,7 +21,6 @@ keywords:
   - neuroimaging
   - video-analysis
   - tribe
-license: MIT
 references:
   - type: software
     title: "TRIBE v2"

@@ -39,15 +39,18 @@ class AtlasAssets:
         name: Stable atlas identifier (e.g. ``"schaefer400"`` or ``"yeo17"``).
         n_parcels: Number of parcels (excluding the medial wall).
         vertex_to_parcel: shape ``(V,)`` int64. Parcel id per fsaverage5
-            vertex; ``-1`` for medial wall.
-        parcel_labels: Length-``n_parcels`` list of human-readable labels.
+            vertex; ``-1`` for medial wall. Marked read-only (the loaders
+            are ``lru_cache``-d, so an in-place mutation would corrupt every
+            subsequent use for the process lifetime).
+        parcel_labels: Length-``n_parcels`` tuple of human-readable labels
+            (a tuple, not a list, so the frozen dataclass is fully immutable).
         sha256: SHA-256 of the underlying ``.npy`` file (for provenance).
     """
 
     name: str
     n_parcels: int
     vertex_to_parcel: npt.NDArray[np.int64]
-    parcel_labels: list[str]
+    parcel_labels: tuple[str, ...]
     sha256: str
 
 
@@ -80,6 +83,18 @@ def _load_npy(filename: str) -> tuple[np.ndarray, str]:
     raw = _read_bytes(filename)
     arr = np.load(io.BytesIO(raw), allow_pickle=False)
     return arr, hashlib.sha256(raw).hexdigest()
+
+
+def _frozen_int64(arr: np.ndarray) -> npt.NDArray[np.int64]:
+    """Return ``arr`` as a read-only int64 array.
+
+    The atlas loaders are ``lru_cache``-d, so the returned array lives for
+    the process lifetime. Making it read-only turns an accidental in-place
+    write into an immediate error instead of silent, global corruption.
+    """
+    out: npt.NDArray[np.int64] = arr.astype(np.int64, copy=False)
+    out.flags.writeable = False
+    return out
 
 
 def _load_labels(filename: str) -> list[str]:
@@ -173,8 +188,8 @@ def load_schaefer400() -> AtlasAssets:
     return AtlasAssets(
         name="schaefer400",
         n_parcels=n_parcels,
-        vertex_to_parcel=arr.astype(np.int64, copy=False),
-        parcel_labels=labels,
+        vertex_to_parcel=_frozen_int64(arr),
+        parcel_labels=tuple(labels),
         sha256=sha,
     )
 
@@ -194,8 +209,8 @@ def load_yeo17() -> AtlasAssets:
     return AtlasAssets(
         name="yeo17",
         n_parcels=n_parcels,
-        vertex_to_parcel=arr.astype(np.int64, copy=False),
-        parcel_labels=labels,
+        vertex_to_parcel=_frozen_int64(arr),
+        parcel_labels=tuple(labels),
         sha256=sha,
     )
 
@@ -212,4 +227,4 @@ def load_schaefer400_to_yeo17() -> npt.NDArray[np.int64]:
             f"expected (n_schaefer={load_schaefer400().n_parcels},)"
         )
         raise AtlasMismatchError(msg)
-    return arr.astype(np.int64, copy=False)
+    return _frozen_int64(arr)

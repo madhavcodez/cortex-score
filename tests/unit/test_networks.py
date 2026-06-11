@@ -66,3 +66,13 @@ def test_build_network_summary_constant_input() -> None:
 def test_build_network_summary_shape_validation() -> None:
     with pytest.raises(ValueError, match="must be 2D"):
         build_network_summary(np.zeros(17, dtype=np.float32))
+
+
+def test_build_network_summary_out_of_range_yeo_index_raises() -> None:
+    """A too-narrow array (fewer columns than the groups reference) must
+    raise AtlasMismatchError instead of silently zero-filling networks."""
+    from cortex_score.exceptions import AtlasMismatchError
+
+    z = np.zeros((4, 5), dtype=np.float32)  # groups reference indices up to 16
+    with pytest.raises(AtlasMismatchError, match="mismatch"):
+        build_network_summary(z)

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 import numpy as np
+import pytest
 
 from cortex_score import (
     PredictionBundle,
@@ -13,6 +14,7 @@ from cortex_score import (
     score_from_predictions,
 )
 from cortex_score.api import ScoreConfig
+from cortex_score.exceptions import CortexScoreError, UnsupportedMeshError
 from cortex_score.schemas import (
     FRAMING_DISCLAIMER,
     FRAMING_PRIMARY,
@@ -142,6 +144,30 @@ def test_score_config_normalization_scope_propagates() -> None:
     )
     assert result.normalization.scope == "reference_distribution"
     assert result.normalization.reference_id == "cortexia-v1-68clip"
+
+
+def test_score_from_predictions_rejects_1d_input() -> None:
+    """A 1-D array must fail with a clear ValueError at the boundary, not
+    an opaque IndexError inside PredictionBundle construction."""
+    with pytest.raises(ValueError, match="must be 2D"):
+        score_from_predictions(np.zeros(20484, dtype=np.float32), model_revision="test")
+
+
+def test_score_from_predictions_rejects_unsupported_mesh() -> None:
+    with pytest.raises(UnsupportedMeshError, match="not supported"):
+        score_from_predictions(_synthetic_preds(), mesh="fsaverage6", model_revision="test")
+    # The error must be catchable both as a ValueError and via the
+    # documented `except CortexScoreError` boundary.
+    assert issubclass(UnsupportedMeshError, ValueError)
+    assert issubclass(UnsupportedMeshError, CortexScoreError)
+
+
+def test_score_from_predictions_rejects_non_finite() -> None:
+    bad = _synthetic_preds()
+    bad[0, 0] = np.nan
+    bad[1, 1] = np.inf
+    with pytest.raises(ValueError, match="non-finite"):
+        score_from_predictions(bad, model_revision="test")
 
 
 def test_emitted_json_contains_top_level_provenance_fields() -> None:

@@ -17,11 +17,10 @@ load a runner once and score many clips.
 
 from __future__ import annotations
 
-import datetime as _dt
 import hashlib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -31,7 +30,7 @@ from cortex_score.atlas import (
     load_schaefer400,
     load_yeo17,
 )
-from cortex_score.exceptions import MissingOptionalDependencyError
+from cortex_score.exceptions import MissingOptionalDependencyError, UnsupportedMeshError
 from cortex_score.processing.aggregate import aggregate_to_rois
 from cortex_score.processing.networks import build_network_summary
 from cortex_score.processing.normalize import DEFAULT_EPS, zscore_within_atlas
@@ -201,38 +200,14 @@ def score_from_prediction_bundle(
 
     license_restrictions = default_tribev2_license_restrictions()
 
-    created_at = utc_now()
-    # IMPORTANT: result_id is the audit identity of this ScoreResult. To
-    # remain stable across releases, it MUST cover every JSON-output
-    # field including framing strings. Building the body from the same
-    # constants ScoreResult uses for serialization keeps the hash from
-    # drifting if framing copy ever changes. (Bug caught in code review.)
-    from cortex_score.schemas import (
-        FRAMING_DISCLAIMER,
-        FRAMING_PRIMARY,
-        FRAMING_SCIENTIFIC,
-    )
-
-    body: dict[str, Any] = {
-        "schema_version": "1.0",
-        "framing": FRAMING_PRIMARY,
-        "framing_scientific": FRAMING_SCIENTIFIC,
-        "framing_disclaimer": FRAMING_DISCLAIMER,
-        "input": input_meta.model_dump(mode="json"),
-        "timing": timing.model_dump(mode="json"),
-        "normalization": normalization.model_dump(mode="json"),
-        "atlas": atlas.model_dump(mode="json"),
-        "provenance": provenance.model_dump(mode="json"),
-        "license_restrictions": [r.model_dump(mode="json") for r in license_restrictions],
-        "warnings": [w.model_dump(mode="json") for w in config.warnings],
-        "networks": [n.model_dump(mode="json") for n in networks],
-        "created_at": created_at.isoformat(),
-    }
-    result_id = compute_result_id(body)
-
-    return ScoreResult(
-        result_id=result_id,
-        created_at=created_at,
+    # Build the result with an empty result_id, then stamp the audit hash
+    # computed from the result's OWN canonical serialization. This makes
+    # result_id cover exactly the fields ScoreResult serializes (framing,
+    # schema_version, created_at, ...) and removes the drift risk of
+    # hand-rebuilding a parallel payload dict. See compute_result_id().
+    draft = ScoreResult(
+        result_id="",
+        created_at=utc_now(),
         input=input_meta,
         timing=timing,
         normalization=normalization,
@@ -242,6 +217,7 @@ def score_from_prediction_bundle(
         warnings=config.warnings,
         networks=networks,
     )
+    return draft.model_copy(update={"result_id": compute_result_id(draft)})
 
 
 def score_from_predictions(
@@ -283,11 +259,7 @@ def score_from_predictions(
         A ``ScoreResult``.
     """
     if mesh != "fsaverage5":
-        msg = (
-            f"mesh='{mesh}' is not supported in v0.1; only 'fsaverage5' is "
-            f"shipped. Future versions will gate this via an explicit Mesh enum."
-        )
-        raise ValueError(msg)
+        raise UnsupportedMeshError(mesh=mesh, supported=("fsaverage5",))
 
     # Validate at the public boundary so callers see a clear error
     # before reaching PredictionBundle.__post_init__.
@@ -300,6 +272,16 @@ def score_from_predictions(
         )
 
     preds_f32 = coerce_float32(preds)
+    # Shape-check before reading shape[1] so a 1-D/0-D array fails with a
+    # clear ValueError at this boundary instead of an opaque IndexError
+    # inside PredictionBundle construction.
+    if preds_f32.ndim != 2:
+        msg = (
+            f"score_from_predictions(): preds must be 2D (T, V); got shape "
+            f"{preds_f32.shape}. If you have a 1D time-mean array, reshape to (1, V)."
+        )
+        raise ValueError(msg)
+
     bundle = PredictionBundle(
         vertex_predictions=preds_f32,
         mesh="fsaverage5",
@@ -503,8 +485,3 @@ __all__ = [
     "score_from_prediction_bundle",
     "score_from_predictions",
 ]
-
-
-# Silence unused-import warnings for re-exports that are imported only
-# by cortex_score.__init__ via this module's namespace.
-_ = _dt

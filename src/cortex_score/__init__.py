@@ -29,8 +29,6 @@ GPU. See README for the install matrix.
 
 from __future__ import annotations
 
-from cortex_score._version import __version__
-
 # High-level API. score_from_predictions / score_from_prediction_bundle
 # stay CPU-only; score() lazily resolves a runner.
 from cortex_score.api import (
@@ -48,6 +46,7 @@ from cortex_score.exceptions import (
     MissingOptionalDependencyError,
     ModelLicenseError,
     PreprocessingWarning,
+    UnsupportedMeshError,
 )
 
 # Schemas and processing modules are pure NumPy / Pydantic — safe to
@@ -63,6 +62,7 @@ from cortex_score.schemas import (
     SegmentMeta,
     TimingMeta,
 )
+from cortex_score.version import __version__
 
 # Semantic grouping (Version > API > Schemas > Exceptions) is more
 # readable in docs than alphabetical, so the RUF022 sort hint is
@@ -92,6 +92,7 @@ __all__ = [  # noqa: RUF022
     "MissingOptionalDependencyError",
     "MissingExternalToolError",
     "IncompatiblePredictionShapeError",
+    "UnsupportedMeshError",
     "AtlasMismatchError",
     "ModelLicenseError",
     "PreprocessingWarning",
